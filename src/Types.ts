@@ -6,11 +6,9 @@ export type GameState = "Initial"|"0Cards" | "2Cards" | "4Cards" | "TrumpReady" 
 
 export type Game= {
     numberOfPlayers: number
-    trumpSuit: string
     players: Player[]
     deck: Card[]
-    pot: number
-    currentBet: number
+    discardedCards: Card[]
     currentTurn: Player | undefined
     currentRound: number
     isGameOver: boolean
@@ -20,6 +18,7 @@ export type Game= {
 
 export type Round = {
     roundNumber: number,
+    trumpSuit: Card | undefined,
     roundWinner: Player | undefined,
     roundPot: number,
     roundCards: Card[],
@@ -31,6 +30,21 @@ export type Round = {
     roundState: GameState
     dealer: number | undefined
     initialized: boolean
+    currentTurn: number
+    turns: Turn[]
+    trumpForSale: boolean
+    dealerTookTrump: boolean
+    playerTookTrump: Player | undefined
+}
+
+export type Turn = {
+    startingPlayer: Player,
+    currentPlayer: Player,
+    nextPlayer: Player,
+    winner: Player | undefined,
+    cardsPlayed: {card: Card, player: Player}[],
+    turnNumber: number,
+    suit: Suit | undefined,
 }
 
 export type Card = {
@@ -40,18 +54,24 @@ export type Card = {
     color: Color,
     isSelectable: boolean,
     isSelected: boolean,
+    isPlayed: boolean,
+    isDiscarded: boolean,
     id: number,
 }
-
-export type Deck = Card[];
 
 export type Player = {
     name: string,
     hand: Card[],
-    score: number,
+    tricks: number,
     hasFolded: boolean,
     isDealer: boolean,
     isSmallBlind: boolean,
     hasExchangedCards: boolean,
     id: number,
+    bank: number,
+    isDeclarer: boolean,
+    hasTakenTrump: boolean,
+    hasRefusedTrump: boolean,
+    hasTakenTrumpEarly: boolean,
+    hasRefusedTrumpEarly: boolean,
 }

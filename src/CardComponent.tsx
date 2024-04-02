@@ -1,19 +1,29 @@
 import React, { useEffect, useState } from 'react'
-import { Card } from './Types';
-import { selectCard } from "./state/gameSlice"
-import { useDispatch } from "react-redux"
+import { Card, Player } from './Types';
+import { isPlayersTurn, selectCard, playCard, isCardPlayable } from "./state/gameSlice"
+import { useDispatch, useSelector } from "react-redux"
+import {RootState} from "./state/store"
 
 interface CardComponentProps {
     card: Card;
+    player: Player
 }
 
 const CardComponent: React.FC<CardComponentProps> = (
-    {  card }
+    { card, player }
 ) => {
     const dispatch = useDispatch();
     const toggleSelected = () => {
-        console.log('Toggling card')
         dispatch(selectCard({card}))
+    }
+
+    const playersTurn = useSelector((state: RootState) => isPlayersTurn(state, player.id));
+
+    const isPlayable = useSelector((state: RootState) => isCardPlayable(state, card));
+
+    const playCardHandler = () => {
+        console.log('Playing card')
+        dispatch(playCard({card, player}))
     }
 
     const toggleIsSelectable = () => {
@@ -24,14 +34,19 @@ const CardComponent: React.FC<CardComponentProps> = (
         return `${card.value} of ${card.suit}`;
     }
 
+
+
     useEffect(() => {
         console.log(`Card ${card.value} ${card.suitSymbol} ${card.isSelected ? 'selected' : 'Not selected'}`);
     }, [card.isSelected, card.suitSymbol, card.value]);
 
     return (
-        <button onClick={() => toggleSelected()} style={{ color: card.color, border: card.isSelected ? 'inset' : 'auto' }}>
-            {card.value} {card.suitSymbol} {card.isSelected ? 'selected' : 'Not selected'}
+        <div>
+        <button onClick={() => toggleSelected()} style={{ color: card.color, border: card.isSelected ? 'inset' : 'outset' }}>
+            {card.value} {card.suitSymbol} {card.isSelected ? 'selected' : ''}
         </button>
+        <button disabled={!isPlayable || !playersTurn || card.isPlayed} onClick={() => playCardHandler()}>Play!</button>
+        </div>
     );
 };
 

@@ -20,6 +20,7 @@ function AppContent() {
         dispatch(initializeGame(5));
     }, [dispatch]);
     const gameIsInitialized = useSelector(gameInitialized)
+    
     return (
         <div className="App">
             <header className="App-header">

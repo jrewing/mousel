@@ -1,9 +1,10 @@
 import React from 'react';
 import PlayerComponent  from './PlayerComponent';
 import { Game, Player } from './Types'
-import { selectGame, selectPlayers, selectRound, selectTrumpSuit, setTrumpSuit } from './state/gameSlice'
+import { selectDealer, selectGame, selectPlayers, selectRound, selectTrumpSuit, setTrumpSuit } from './state/gameSlice'
 import { useSelector, useDispatch } from "react-redux"
 import { dealCards } from './state/gameSlice'
+import BattleAreaComponent from './BattleAreaComponent';
 
 interface GameComponentProps {
 
@@ -15,7 +16,8 @@ const GameComponent: React.FC<GameComponentProps> = () => {
     const trumpSuit = useSelector(selectTrumpSuit);
     const round = useSelector(selectRound);
     const game = useSelector(selectGame);
-    console.log(game);
+    const dealer = useSelector(selectDealer)
+
     const dealCardsHandler = () => {
         dispatch(dealCards())
     }
@@ -23,8 +25,11 @@ const GameComponent: React.FC<GameComponentProps> = () => {
         dispatch(setTrumpSuit())
     }
 
-console.log(round);
-console.log(players);
+    const readyToDeal = (round.roundState === 'Initial' || round.roundState === '0Cards') 
+    && dealer !== undefined && (round.roundPot >= (game.numberOfPlayers - 1)) || (round.roundState === '2Cards' && trumpSuit !== undefined)
+    
+    console.log(typeof round.roundPot, round.roundPot);
+    console.log(typeof game.numberOfPlayers, game.numberOfPlayers);
     return (
         <div>
             <div>
@@ -32,19 +37,23 @@ console.log(players);
             </div>
             <div>
                 <h2>Trump Suit </h2>
-                <h3>{trumpSuit}</h3>
+                <h3>{trumpSuit?.suit}</h3>
+                <div>Round pot {round.roundPot}</div>
+                <div>Round state {round.roundState}</div>
+                <div>Number of players {game.numberOfPlayers}</div>
+                <div>Lead suit: {round.turns[round.currentTurn]?.suit} {round.suitLed}</div>
             </div>
             <div>
-                <button disabled={round.roundState === 'Initial' || round.roundState === '0Cards'} onClick={() => dealCardsHandler()}>Deal</button>
-                <button onClick={() => setTrumpSuitHandler()}>Set Trump Suit</button>
+                <button disabled={!readyToDeal} onClick={() => dealCardsHandler()} >Deal</button>
+                <button disabled={round.roundState !== '2Cards' || trumpSuit !== undefined} onClick={() => setTrumpSuitHandler()}>Set Trump Suit</button>
             </div>
             <div>
                 {/* Add player components */}
                 {players.map((player, index) => (
-                    <PlayerComponent playerId={player.id}/>
+                    <PlayerComponent key={`player-${player.id}`} playerId={player.id}/>
                 ))}
-
             </div>
+            <BattleAreaComponent />
         </div>
     );
 };
