@@ -19,10 +19,8 @@ export type Game= {
 export type Round = {
     roundNumber: number,
     trumpSuit: Card | undefined,
-    roundWinner: Player | undefined,
     roundPot: number,
-    roundCards: Card[],
-    suitLed: Suit | undefined,
+    //suitLed: Suit | undefined,
     playersInRound: Player[],
     hiddenTrumpSuit: boolean
     firstTwoCards: boolean
@@ -30,7 +28,6 @@ export type Round = {
     roundState: GameState
     dealer: number | undefined
     initialized: boolean
-    currentTurn: number
     turns: Turn[]
     trumpForSale: boolean
     dealerTookTrump: boolean
@@ -38,12 +35,9 @@ export type Round = {
 }
 
 export type Turn = {
-    startingPlayer: Player,
-    currentPlayer: Player,
-    nextPlayer: Player,
+    nextPlayer: Player  | undefined,
     winner: Player | undefined,
     cardsPlayed: {card: Card, player: Player}[],
-    turnNumber: number,
     suit: Suit | undefined,
 }
 
@@ -74,4 +68,5 @@ export type Player = {
     hasRefusedTrump: boolean,
     hasTakenTrumpEarly: boolean,
     hasRefusedTrumpEarly: boolean,
+    isIn: boolean,
 }

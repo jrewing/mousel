@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Card, Player } from './Types'
 import CardComponent from './CardComponent';
 import { useDispatch, useSelector } from "react-redux"
-import { addWager, selectPlayer, setDealer, exchangeCards, selectRound, selectPlayerWhoShouldExchangeCards, selectDealerTookTrump, selectTrumpForSale, selectPlayerTookTrump, takeTrumpEarly, takeTrump } from './state/gameSlice'
+import { addWager, selectPlayer, setDealer, exchangeCards, selectRound, selectPlayerWhoShouldExchangeCards, selectDealerTookTrump, selectTrumpForSale, selectPlayerTookTrump, takeTrumpEarly, takeTrump, playerFolds, refuseTrump, selectPlayerWhoCanTakeTrump } from './state/gameSlice'
 import { selectDealer } from './state/gameSlice'
 import {RootState} from "./state/store"
 import { idText } from 'typescript';
@@ -15,7 +15,7 @@ playerId: number;
 const PlayerComponent: React.FC<PlayerComponentProps> = ({playerId}) => {
     const dispatch = useDispatch();
     //Load player hand from the player redux state
-    const player = useSelector((state: RootState) => selectPlayer(state, playerId)); // use RootState to type the state
+    const player = useSelector((state: RootState) => selectPlayer(state, playerId)); 
     const dealer = useSelector(selectDealer)
     const round = useSelector(selectRound)
     const isDealer = dealer?.id === playerId;
@@ -24,10 +24,11 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({playerId}) => {
     const dealerTookTrump = useSelector(selectDealerTookTrump)
     const trumpForSale = useSelector(selectTrumpForSale)
     const playerTookTrump = useSelector(selectPlayerTookTrump)
-
-    const canTakeTrumpEarly = isDealer && round.roundState === '2Cards' && trumpForSale;
-
+    const isItMyTurnToTakeTrump = useSelector(selectPlayerWhoCanTakeTrump)?.id === playerId;
+    const canNotTakeTrumpEarly = !isItMyTurnToTakeTrump || playerTookTrump !== undefined || dealerTookTrump || round.roundState !== '2Cards' || !isDealer || round.trumpSuit === undefined || !trumpForSale || player?.hasFolded
+    const canNotTakeTrump = !isItMyTurnToTakeTrump || playerTookTrump !== undefined || dealerTookTrump || round.roundState !== '4Cards' || !trumpForSale || player?.hasFolded
     const currentRound = useSelector((state: RootState) => state.game.currentRound);
+
 
     const addWagerHandler = () => {
         const amount = 1;
@@ -58,27 +59,34 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({playerId}) => {
     }
 
     const refuseTrumpHandler = () => {
-        // dispatch(takeTrump())        
+        if (player) {
+            dispatch(refuseTrump({ player: player }))        
+        }     
     }
 
     const fold = () => {
-        //setPlayerHasFolded(true);
+        if (!player) return;
+        dispatch(playerFolds({player: player}))
     }
+
+
 
     return (
         <div>
             { player?.hand.map((card: Card, index: number) => (
-                <CardComponent key={index} card={card} player={player} />
+                !card.isDiscarded && <CardComponent key={index} card={card} player={player} />
             ))}
             <div>Bank: {player?.bank}</div>
             
             <button disabled={!dealer || player?.isSmallBlind || isDealer || currentRound > 0} onClick={() => addWagerHandler()}>Add wager</button>
-            <button disabled={player?.id !== playerWhoShouldExcangeCards?.id || player?.hasExchangedCards || round.roundState !== '4Cards'} onClick={() => exchangeCardsHandler()}>Change cards</button>
-            <button onClick={() => fold()}>Fold</button>
+            <button disabled={player?.id !== playerWhoShouldExcangeCards?.id || player?.hasExchangedCards || round.roundState !== '4Cards' || player?.hasFolded} onClick={() => exchangeCardsHandler()}>Change cards</button>
+
+            <button disabled={player?.hasFolded || round.roundState !== '4Cards' || player?.hasExchangedCards} onClick={() => fold()}>Fold</button>
             <button disabled={dealer?.id !== undefined} style={isDealer ? {border: '1px solid red'} : {border: '1px solid black'}} onClick={() => setDealerHandler()}>Set Dealer</button>
-            <button disabled={round.roundState !== '2Cards' || !isDealer} onClick={() => takeTrumpEarlyHandler()}>Take Trump Early</button>
-            <button disabled={round.roundState !== '2Cards' || !isDealer} onClick={() => refuseTrumpHandler()}>Refuse Trump</button>
-            <button disabled={round.roundState !== '4Cards' || !trumpForSale} onClick={() => takeTrumpHandler()}>Take Trump</button>
+            <button disabled={canNotTakeTrumpEarly} onClick={() => takeTrumpEarlyHandler()}>Take Trump Early</button>
+            <button disabled={canNotTakeTrump} onClick={() => takeTrumpHandler()}>Take Trump</button>
+            <button disabled={canNotTakeTrump} onClick={() => refuseTrumpHandler()}>Refuse Trump</button>
+    
         </div>
     );
 };
