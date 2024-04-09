@@ -818,9 +818,9 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
         }
         const suitLed = currentTurn.suit;
 
-        const cardOfSuitLed = nextPlayer.hand.some(c => {
-            const card = state.game.deck.find(card => card.id === c);
-            if (card && card.suit === suitLed) {
+        const cardOfSuitLed = nextPlayer.hand.some(cardinHandId => {
+            const card = state.game.deck.find(card => card.id === cardinHandId);
+            if (card && card.suit === suitLed && !card.isPlayed) {
                 return true;
             }
             return false;
@@ -836,7 +836,6 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
             return true;
         }
     }
-    console.warn('Card not found in hand', nextPlayer?.id, card, nextPlayer?.hand);
     return false;
 }
 export const selectPlayerWhoShouldExchangeCards = (state: { game: Game }) => {

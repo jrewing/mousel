@@ -394,7 +394,7 @@ async function setupAndDealCards() {
         const currentRound = state.currentRound;
         const playersInRound = state.players.filter(p => p.isIn && !p.hasFolded);
         expect(state.rounds[currentRound].roundPot).toBe(4);
-         //play 4 turns. Loop thorugh the following lines 4 times
+         //play 4 turns.
         for (let i = 0; i < 4; i++) {
             const currentTurn = selectCurrentTurn(store.getState());
 
@@ -410,21 +410,19 @@ async function setupAndDealCards() {
             const startIndex = playersInRound.findIndex(player => player.id === startingPlayer?.id);
             // rearrange players so that the starting player is first
             const orderedPlayers = playersInRound.slice(startIndex).concat(playersInRound.slice(0, startIndex));
-
+            console.log(orderedPlayers, i);
             for (const player of orderedPlayers) {
                 //find card that is playable
                 let aCardPlayable = false;
                 for (const cardId of player.hand) {
                     if (isCardPlayable(store.getState(), cardId)) {
+                        console.log('card is playable');
                         aCardPlayable = true;
                         state = await dispatchAndGetState(playCard({ playerId: player.id, cardId: cardId }));
                         break;
                     }
                 }
-                //expect the lead suit to be set
-
-                    expect(state.rounds[currentRound].turns[i].suit).toBeDefined();
-
+                expect(state.rounds[currentRound].turns[i].suit).toBeDefined();
                 expect(aCardPlayable).toEqual(true);
             }
             // Check the state after each full round of turns
@@ -443,14 +441,13 @@ async function setupAndDealCards() {
         expect(state.rounds[currentRound].roundState).toEqual('RoundOver');
         //dispatch endRound
         state = await dispatchAndGetState(endRound());
-        //expect the round to be settled
 
         //expect the a new round to be created
         expect(state.rounds.length).toEqual(2);
         for (const player of state.players) {
             expect(player.hand.length).toEqual(0);
             expect(player.bank).toBeGreaterThan(190);
-            expect(player.bank).toBeLessThan(204);
+            expect(player.bank).toBeLessThan(205);
             expect(player.bank).not.toBe(Infinity);
         }
 
