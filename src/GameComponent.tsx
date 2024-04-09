@@ -11,47 +11,34 @@ interface GameComponentProps {
 
 const GameComponent: React.FC<GameComponentProps> = () => {
     const dispatch = useDispatch();
-    const players = useSelector(selectPlayers);
     const trumpSuit = useSelector(selectTrumpSuit);
     const round = useSelector(selectRound);
     const game = useSelector(selectGame);
-    const dealer = useSelector(selectDealer)
 
 
-    const dealCardsHandler = () => {
-        dispatch(dealCards())
-    }
+
+
     const setTrumpSuitHandler = () => {
         dispatch(setTrumpSuit())
     }
 
-    const readyToDeal = (round.roundState === 'Initial' || round.roundState === '0Cards')
-    && dealer !== undefined && (round.roundPot >= (game.numberOfPlayers - 1)) || (round.roundState === '2Cards' && trumpSuit !== undefined)
+
 
     return (
         <div>
             <div>
-                <h1>Game</h1>
+                <button disabled={round?.roundState !== '2Cards' || trumpSuit !== undefined} onClick={() => setTrumpSuitHandler()}>Set Trump Suit</button>
             </div>
-            <div>
-                <h2>Trump Suit </h2>
-                <h3>{trumpSuit?.suit}</h3>
-                <div>Round pot {round.roundPot}</div>
-                <div>Round state {round.roundState}</div>
-                <div>Number of players {game.numberOfPlayers}</div>
-                <div>Lead suit: {round.turns.at(-1)?.suit} </div>
+            <div className="game-container">
+                <div className="player-container">
+                    {game.players.map((player, index) => (
+                        <div key={`player-${player.id}`} className={`player player-${index}`}>
+                            <PlayerComponent playerId={player.id}/>
+                        </div>
+                    ))}
+                </div>
+                <BattleAreaComponent />
             </div>
-            <div>
-                <button disabled={!readyToDeal} onClick={() => dealCardsHandler()} >Deal</button>
-                <button disabled={round.roundState !== '2Cards' || trumpSuit !== undefined} onClick={() => setTrumpSuitHandler()}>Set Trump Suit</button>
-            </div>
-            <div>
-                {/* Add player components */}
-                {players.map((player, index) => (
-                    <PlayerComponent key={`player-${player.id}`} playerId={player.id}/>
-                ))}
-            </div>
-            <BattleAreaComponent />
         </div>
     );
 };

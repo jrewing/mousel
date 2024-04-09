@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import './App.css';
+import './styles/styles.css';
 import GameComponent  from './GameComponent';
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import { gameInitialized, initializeGame, selectGame } from "./state/gameSlice"

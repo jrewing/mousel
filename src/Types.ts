@@ -2,7 +2,7 @@ export type Suit = "Hearts" | "Diamonds" | "Clubs" | "Spades";
 export type SuitSymbol = "♥" | "♦" | "♣" | "♠";
 export type Value =  2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | "Jack" | "Queen" | "King" | "Ace"
 export type Color = "Red" | "Black";
-export type GameState = "Initial"|"0Cards" | "2Cards" | "4Cards" | "TrumpReady" | "RoundSettled" | "Showdown" | "SmallBlinds";
+export type GameState = "Initial" | "0Cards" | "2Cards" | "4Cards" | "TrumpReady" | "RoundSettled" | "RoundOver" | "Showdown" | "SmallBlinds" | "GameOver";
 
 export type Game= {
     numberOfPlayers: number
@@ -21,7 +21,7 @@ export type Round = {
     trumpSuit: Card | undefined,
     roundPot: number,
     //suitLed: Suit | undefined,
-    playersInRound: Player[],
+    playersInRound: number[],
     hiddenTrumpSuit: boolean
     firstTwoCards: boolean
     secondTwoCards: boolean
@@ -31,13 +31,13 @@ export type Round = {
     turns: Turn[]
     trumpForSale: boolean
     dealerTookTrump: boolean
-    playerTookTrump: Player | undefined
+    playerTookTrump: number | undefined
 }
 
 export type Turn = {
-    nextPlayer: Player  | undefined,
-    winner: Player | undefined,
-    cardsPlayed: {card: Card, player: Player}[],
+    nextPlayer: number | undefined,
+    winner: number | undefined,
+    cardsPlayed: {cardId: number, playerId: number}[],
     suit: Suit | undefined,
 }
 
@@ -47,15 +47,18 @@ export type Card = {
     suitSymbol: SuitSymbol,
     color: Color,
     isSelectable: boolean,
+    isFresh: boolean,
     isSelected: boolean,
     isPlayed: boolean,
     isDiscarded: boolean,
+    isTrump: boolean,
+    isDealt: boolean,
     id: number,
 }
 
 export type Player = {
     name: string,
-    hand: Card[],
+    hand: number[], // Card ids
     tricks: number,
     hasFolded: boolean,
     isDealer: boolean,

@@ -37,7 +37,7 @@ const createPlayers = (numberOfPlayers: number) => {
     for (let i = 0; i < numberOfPlayers; i++) {
         const player = {
             id: i,
-            name: `Player ${i + 1}`,
+            name: `Player ${i}`,
             hasFolded: false,
             isDealer: false,
             hand: [],
@@ -75,6 +75,9 @@ const createDeck = () => {
                 isSelected: false,
                 isPlayed: false,
                 isDiscarded: false,
+                isDealt: false,
+                isFresh: true,
+                isTrump: false,
             })
         }
     }
@@ -142,7 +145,7 @@ const gameSlice = createSlice({
         },
         dealCards(state) {
             //if roundState is Initial or 0Cards, but all players except dealer have not set small blind. Issue warning and return
-            if (state.rounds[state.currentRound].roundState === 'Initial' || state.rounds[state.currentRound].roundState === '0Cards') {
+            if (state.currentRound === 0 && (state.rounds[state.currentRound].roundState === 'Initial' || state.rounds[state.currentRound].roundState === '0Cards')) {
                 if (!state.players.filter(player => !player.isDealer).every(player => player.isSmallBlind)) {
                     console.warn('DealCards: All players have not set small blind. Can´t deal cards');
                     return;
@@ -154,16 +157,18 @@ const gameSlice = createSlice({
                 console.warn('DealCards: Can not deal next two cards until trump suit is set.');
                 return;
             }
-            const newDeck = [...state.deck];
+
             for (let i = 0; i < 2; i++) {
                 for (let j = 0; j < state.players.length; j++) {
-                    const card = newDeck.pop();
+                    //Find the first card in the deck not dealt or discarded or played
+                    const card = state.deck.find(card => card.isFresh);
                     if (card) {
-                        state.players[j].hand.push(card);
+                        state.players[j].hand.push(card.id);
+                        card.isDealt = true;
+                        card.isFresh = false;
                     }
                 }
             }
-            state.deck = newDeck;
            if(state.rounds[state.currentRound].roundState === 'Initial' || state.rounds[state.currentRound].roundState === '0Cards') {
                 state.rounds[state.currentRound].roundState = '2Cards';
            } else if (state.rounds[state.currentRound].roundState === '2Cards') {
@@ -181,28 +186,25 @@ const gameSlice = createSlice({
                 console.warn('SetTrumpSuit: Trump suit is already set');
                 return;
             }
-            state.rounds[state.currentRound].trumpSuit = state.deck[0];
-            state.deck = state.deck.slice(1);
+            const firstFreshCardIndex = state.deck.findIndex(card => !card.isDiscarded && !card.isPlayed && !card.isDealt);
+            state.rounds[state.currentRound].trumpSuit = state.deck[firstFreshCardIndex];
+            state.deck[firstFreshCardIndex].isTrump = true;
+            state.deck[firstFreshCardIndex].isFresh = false;
             // If hidden is not provided in the payload, default to false
             state.rounds[state.currentRound].hiddenTrumpSuit = action.payload?.hidden !== undefined ? action.payload.hidden : false;
         },
-        toggleSelectCard(state, action: PayloadAction<{ card: Card }>) {
+        toggleSelectCard(state, action: PayloadAction<number>) {
             //Can only select card if roundState is 4Cards and player has not changed cards or folded
-
-            const card = action.payload.card;
-            const player = state.players.find(player => player.hand.find(cardf => cardf.id === card.id))
-
-
-            if (player && !player.hasExchangedCards && !player.hasFolded && player.isIn) {
-                const newHand = player.hand.map(c => {
-                    if (c.id === card.id) {
-                        return { ...c, isSelected: !c.isSelected };
-                    }
-                    return c;
-                });
-                player.hand = newHand;
+            const cardIndex = state.deck.findIndex(card => card.id === action.payload);
+            const player = state.players.find(player => player.hand.find(c => c === action.payload) !== undefined);
+            player?.hand.forEach(cardId => {
+                console.log('player card', cardId)
+            })
+            console.log('toggleSelectCard', action.payload, cardIndex, state.deck[cardIndex].id, player?.isIn);
+            if (state.deck[cardIndex] && player && !player.hasExchangedCards && !player.hasFolded && player.isIn) {
+                state.deck[cardIndex].isSelected = !state.deck[cardIndex].isSelected;
             } else {
-                console.warn('Can not select card. Player has exchanged cards or has folded');
+                console.warn('Can not select card. Player has exchanged cards or has folded or card not found');
             }
 
         },
@@ -224,18 +226,22 @@ const gameSlice = createSlice({
                 console.warn('no player took trump.  Cant exchange cards');
                 return;
             }
-            const newDeck = [...state.deck];
-            const discardedCards = [...state.discardedCards]
-            const newHand = player.hand.map(card => {
-                if (card.isSelected) {
-                    discardedCards.push({...card, isDiscarded: true});
-                    const drawnCard = newDeck.pop();
+
+            const newHand = player.hand.map(cardId => {
+                const playerCard = state.deck.find(c => c.id === cardId);
+                if (playerCard?.isSelected) {
+                    playerCard.isSelected = false;
+                    playerCard.isDiscarded = true;
+                    playerCard.isFresh = false;
+                    const drawnCard = state.deck.find(card => card.isFresh);
                     if (drawnCard) {
-                        return drawnCard;
+                        drawnCard.isDealt = true;
+                        drawnCard.isFresh = false;
+                        return drawnCard.id;
                     }
-                    return card;
+                    return cardId;
                 }
-                return card;
+                return cardId;
             });
 
             // Find the index of the player in the state
@@ -245,8 +251,6 @@ const gameSlice = createSlice({
             if (playerIndex !== -1) {
                 state.players[playerIndex] = { ...player, hand: newHand, hasExchangedCards: true};
             }
-            // Replace the deck with the updated deck
-            state.deck = newDeck;
 
             //If all players who is in and not folded have exchanged cards, set roundState to Showdown
             if (state.players.filter(p=>p.isIn&&!p.hasFolded).every(player => player.hasExchangedCards) && playerTookTrump !== undefined) {
@@ -254,9 +258,9 @@ const gameSlice = createSlice({
                 //Reload the player who took trump becuase it seems playerTookTrump is outdated
                 const playerTookTrump = state.players.find(player => player.hasTakenTrump);
                 const turn = {
-                    startingPlayer: playerTookTrump ,
-                    currentPlayer: playerTookTrump ,
-                    nextPlayer: playerTookTrump  ,
+                    startingPlayer: playerTookTrump?.id,
+                    currentPlayer: playerTookTrump?.id,
+                    nextPlayer: playerTookTrump?.id,
                     winner: undefined,
                     cardsPlayed: [],
                     turnNumber: 1,
@@ -307,7 +311,7 @@ const gameSlice = createSlice({
                     //add trump card to player hand
                     const trumpCard = state.rounds[state.currentRound].trumpSuit;
                     if (trumpCard) {
-                        player.hand.push(trumpCard);
+                        player.hand.push(trumpCard.id);
                         player.hasTakenTrumpEarly = true;
                         player.hasTakenTrump = true;
                         player.isIn = true;
@@ -317,7 +321,7 @@ const gameSlice = createSlice({
             }
             )
         },
-        takeTrump(state, action: PayloadAction<{player: Player}>) {
+        takeTrump(state, action: PayloadAction<number>) {
             //Can only take trump if roundstate is 4Cards and player has not taken trump and player has not folded
             if (state.rounds[state.currentRound].roundState !== '4Cards') {
                 console.warn('Roundstate is not 4Cards. Cant take trump');
@@ -333,30 +337,31 @@ const gameSlice = createSlice({
                 return;
             }
 
-            const player = action.payload.player;
-            if (player.hasTakenTrump) {
+            const player = state.players.find(player => player.id === action.payload);
+            if (player?.hasTakenTrump) {
                 console.warn('Player has already taken trump');
                 return;
             }
 
-            if (player.hasFolded) {
+            if (player?.hasFolded) {
                 console.warn('Player has folded. Cant take trump');
                 return;
             }
 
             state.rounds[state.currentRound].trumpForSale = false;
-            state.rounds[state.currentRound].playerTookTrump = action.payload.player;
+            state.rounds[state.currentRound].playerTookTrump = action.payload;
             state.players = state.players.map(player => {
-                if (player.id === action.payload.player.id && state.rounds[state.currentRound].trumpSuit !== undefined) {
+                if (player.id === action.payload && state.rounds[state.currentRound].trumpSuit !== undefined) {
                         player.hasTakenTrump = true;
                         player.isIn = true;
                 }
 
                 return player;
-            }
-            )
+            })
+            //When a player takes the trump, that player is the starting player
+
         },
-        refuseTrump(state, action: PayloadAction<{player: Player}>) {
+        refuseTrump(state, action: PayloadAction<number>) {
             if (state.rounds[state.currentRound].roundState !== '4Cards') {
                 console.warn('Roundstate is not 4Cards. Cant take trump');
                 return;
@@ -371,47 +376,52 @@ const gameSlice = createSlice({
                 return;
             }
 
-            const player = action.payload.player;
-            if (player.hasTakenTrump) {
+            const player = state.players.find(player => player.id === action.payload);
+            if (player?.hasTakenTrump) {
                 console.warn('Player has already taken trump');
                 return;
             }
 
-            if (player.hasFolded) {
+            if (player?.hasFolded) {
                 console.warn('Player has folded. Cant take trump');
                 return;
             }
 
             state.players = state.players.map(player => {
-                if (player.id === action.payload.player.id) {
+                if (player.id === action.payload) {
                     player.hasRefusedTrump = true;
                 }
                 return player;
             })
         },
-        playerFolds(state, action: PayloadAction<{player: Player}>) {
+        playerFolds(state, action: PayloadAction<number>) {
             state.players = state.players.map(player => {
-                if (player.id === action.payload.player.id) {
+                if (player.id === action.payload) {
                     player.hasFolded = true;
                     player.isIn = false;
                 }
+                //set all cards in hand to isDiscarded
+                player.hand.forEach(cardId => {
+                    const card = state.deck.find(c => c.id === cardId);
+                    if (card) {
+                        card.isDiscarded = true;
+                    }
+                });
                 return player;
             })
         },
-        playerIsIn(state, action: PayloadAction<{player: Player}>) {
+        playerIsIn(state, action: PayloadAction<number>) {
             state.players = state.players.map(player => {
-                if (player.id === action.payload.player.id) {
+                if (player.id === action.payload) {
                     player.isIn = true;
                     player.hasFolded = false;
                 }
                 return player;
             })
         },
-        discardCard(state, action: PayloadAction<{card: Card}>) {
-
-            const card = action.payload.card;
-
-            const player = state.players.find(player => player.hand.find(c => c.id === card.id));
+        discardCard(state, action: PayloadAction<number>) {
+            const card = state.deck.find(card => card.id === action.payload);
+            const player = state.players.find(player => player.hand.find(c => c === card?.id));
 
             if (!player) {
                 console.warn('Player not found');
@@ -431,18 +441,19 @@ const gameSlice = createSlice({
                 return;
             }
 
-            if (player) {
-                const newHand = player.hand.map(c => {
-                    if (c.id === card.id) {
-                        return { ...c, isDiscarded: true };
-                    }
-                    return c;
-                });
-                player.hand = newHand;
+            if (player && card) {
+                player.hand = player.hand.filter(c => c !== card.id);
+                card.isDiscarded = true;
             }
         },
-        playCard(state, action: PayloadAction<{ card: Card, player: Player }>) {
-            const { card, player } = action.payload;
+        playCard(state, action: PayloadAction<{ cardId: number, playerId: number }>) {
+            const card = state.deck.find(card => card.id === action.payload.cardId);
+            const player = state.players.find(player => player.id === action.payload.playerId);
+            if (!card || !player) {
+                console.warn('Card or player not found. Cant play card');
+                return;
+            }
+            //playersInRound is an array of player
             const playersInRound = state.players.filter(p => p.isIn && !p.hasFolded);
 
             const playerIndex = playersInRound.findIndex(p => p.id === player.id);
@@ -483,21 +494,24 @@ const gameSlice = createSlice({
                 return
             }
 
-                const newHand = state.players[playerIndex].hand.map(c => {
+               state.deck = state.deck.map(c => {
                     if (c.id === card.id) {
                         return { ...c, isPlayed: true };
                     }
                     return c;
                 });
-                playersInRound[playerIndex].hand = newHand;
 
 
             if (currentTurn && currentTurn?.cardsPlayed.length < playersInRound.length) {
-                if (currentRound.turns.length === 1) {
-                    currentTurn.suit = card.suit;
+                if (currentTurn.cardsPlayed.length === 0) {
+                    console.log('first turn set the suit')
+                    if (state.rounds.at(-1) && state.rounds.at(-1)!.turns.at(-1)) {
+                        state.rounds.at(-1)!.turns.at(-1)!.suit = card.suit;
+                    }
                 }
-                currentTurn.cardsPlayed.push({ card, player });
-                currentTurn.nextPlayer = playersInRound[(playerIndex + 1) % playersInRound.length];
+                currentTurn.cardsPlayed.push({ cardId: card.id, playerId: player.id });
+                //Set next player. Next player is the player after the current player in the playersInRound array which has not folded
+                currentTurn.nextPlayer = playersInRound[(playerIndex + 1) % playersInRound.length].id;
             } else if (!currentTurn){
                 //I think this is an error state
                 console.warn('no current turn');
@@ -516,237 +530,247 @@ const gameSlice = createSlice({
                 //if all players who are in and not folded have played a card, end turn
 
             if (currentTurn && currentTurn?.cardsPlayed?.length >= playersInRound.length) {
-                console.log('end turn');
                 //End turn
                 //Find winner. Winning card is the highest card of the suit led or the highest trump card
-                const winner = currentTurn.cardsPlayed.reduce((acc: { card: Card; player: Player},  { card, player }: { card: Card; player: Player }) => {
-                    if (acc.card.suit === currentRound.trumpSuit?.suit && card.suit === currentRound.trumpSuit.suit) {
-                        if (card.value === 'Jack') {
-                            return { card, player };
+                const winner = currentTurn.cardsPlayed.reduce((prev, current) => {
+
+                    const prevCard = state.deck.find(card => card.id === prev.cardId);
+                    const currentCard = state.deck.find(card => card.id === current.cardId);
+
+                    if (prevCard && currentCard) {
+                        if (prevCard.suit === currentTurn.suit && currentCard.suit === currentTurn.suit) {
+                            if (prevCard.value === 'Ace' && currentCard.value === 'Ace') {
+                                return prev;
+                            }
+                            if (prevCard.value === 'Ace') {
+                                return prev;
+                            }
+                            if (currentCard.value === 'Ace') {
+                                return current;
+                            }
+                            if (prevCard.value === 'King' && currentCard.value === 'King') {
+                                return prev;
+                            }
+                            if (prevCard.value === 'King') {
+                                return prev;
+                            }
+                            if (currentCard.value === 'King') {
+                                return current;
+                            }
+                            if (prevCard.value === 'Queen' && currentCard.value === 'Queen') {
+                                return prev;
+                            }
+                            if (prevCard.value === 'Queen') {
+                                return prev;
+                            }
+                            if (currentCard.value === 'Queen') {
+                                return current;
+                            }
+                            if (prevCard.value === 'Jack' && currentCard.value === 'Jack') {
+                                return prev;
+                            }
+                            if (prevCard.value === 'Jack') {
+                                return prev;
+                            }
+                            if (currentCard.value === 'Jack') {
+                                return current;
+                            }
+                            if (prevCard.value === 10 && currentCard.value === 10) {
+                                return prev;
+                            }
+                            if (prevCard.value === 10) {
+                                return prev;
+                            }
+                            if (currentCard.value === 10) {
+                                return current;
+                            }
+                            if (prevCard.value === 9 && currentCard.value === 9) {
+                                return prev;
+                            }
+                            if (prevCard.value === 9) {
+                                return prev;
+                            }
+                            if (currentCard.value === 9) {
+                                return current;
+                            }
+                            if (prevCard.value === 8 && currentCard.value === 8) {
+                                return prev;
+                            }
+                            if (prevCard.value === 8) {
+                                return prev;
+                            }
+                            if (currentCard.value === 8) {
+                                return current;
+                            }
+                            if (prevCard.value === 7 && currentCard.value === 7) {
+                                return prev;
+                            }
+                            if (prevCard.value === 7) {
+                                return prev;
+                            }
+                            if (currentCard.value === 7) {
+                                return current;
+                            }
+                            if (prevCard.value === 6 && currentCard.value === 6) {
+                                return prev;
+                            }
+                            if (prevCard.value === 6) {
+                                return prev;
+                            }
+                            if (currentCard.value === 6) {
+                                return current;
+                            }
+                            if (prevCard.value === 5 && currentCard.value === 5) {
+                                return prev;
+                            }
+                            if (prevCard.value === 5) {
+                                return prev;
+                            }
+                            if (currentCard.value === 5) {
+                                return current;
+                            }
+                        } else if (prevCard.suit === currentTurn.suit && currentCard.suit !== currentTurn.suit) {
+                            return prev;
                         }
-                        if (acc.card.value === 'Jack') {
-                            return acc;
-                        }
-                        if (card.value === 'Ace') {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 'Ace') {
-                            return acc;
-                        }
-                        if (card.value === 'King') {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 'King') {
-                            return acc;
-                        }
-                        if (card.value === 'Queen') {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 'Queen') {
-                            return acc;
-                        }
-                        if (card.value === 10) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 10) {
-                            return acc;
-                        }
-                        if (card.value === 9) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 9) {
-                            return acc;
-                        }
-                        if (card.value === 8) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 8) {
-                            return acc;
-                        }
-                        if (card.value === 7) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 7) {
-                            return acc;
-                        }
-                        if (card.value === 6) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 6) {
-                            return acc;
-                        }
-                        if (card.value === 5) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 5) {
-                            return acc;
-                        }
-                    } else if (acc.card.suit === currentRound.trumpSuit?.suit && card.suit !== currentRound.trumpSuit.suit) {
-                        return acc;
-                    } else if (card.suit === currentRound.trumpSuit?.suit && acc.card.suit !== currentRound.trumpSuit.suit) {
-                        return { card, player };
-                    } else if (acc.card.suit === currentTurn.suit && card.suit === currentTurn.suit) {
-                        if (card.value === 'Jack') {
-                            return { card, player };
-                        }
-                        if (
-                            acc.card.value === 'Jack') {
-                            return acc;
-                        }
-                        if (card.value === 'Ace') {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 'Ace') {
-                            return acc;
-                        }
-                        if (card.value === 'King') {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 'King') {
-                            return acc;
-                        }
-                        if (card.value === 'Queen') {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 'Queen') {
-                            return acc;
-                        }
-                        if (card.value === 10) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 10) {
-                            return acc;
-                        }
-                        if (card.value === 9) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 9) {
-                            return acc;
-                        }
-                        if (card.value === 8) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 8) {
-                            return acc;
-                        }
-                        if (card.value === 7) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 7) {
-                            return acc;
-                        }
-                        if (card.value === 6) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 6) {
-                            return acc;
-                        }
-                        if (card.value === 5) {
-                            return { card, player };
-                        }
-                        if (acc.card.value === 5) {
-                            return acc;
-                        }
-                    } else if (acc.card.suit === currentTurn.suit && card.suit !== currentTurn.suit) {
-                        return acc;
+                        return current;
                     }
-                    return { card, player };
-                });
+                    return prev;
+                }
+                );
 
                 //Add trick to winner
-                const winnerIndex = state.players.findIndex(p => p.id === winner.player.id);
+                const winnerIndex = state.players.findIndex(p => p.id === winner.playerId);
                 if (winnerIndex !== -1) {
-                    console.log('winner', winner.player.name, winner.player.id, winnerIndex);
                     state.players[winnerIndex].tricks++;
                     //set winner on turn
                     const currentTurn = state.rounds[state.currentRound].turns.at(-1);
                     if (currentTurn) {
-                        currentTurn.winner = winner.player;
+                        currentTurn.winner = winner.playerId;
                     }
                 }
 
-                currentTurn.winner = winner.player;
+                //currentTurn.winner = winner.playerId;
 
-                if (currentRound.turns.length > 3) {
-                    //End round
-                    let newRoundPot = 0;
-                    //Calculate points and add to winner
-                    // if player who took trump got less than 2 tricks, the player must add the amount of the round pot (times 2 if 0 tricks) to the new round pot
-                    const playerWhoTookTrump = state.players.find(player => player.hasTakenTrump);
-                    if (playerWhoTookTrump && playerWhoTookTrump.tricks < 2) {
-                        newRoundPot += (2 - playerWhoTookTrump.tricks) * (state.rounds.at(-1)?.roundPot ?? 0);
-                        playerWhoTookTrump.bank -= (2 - playerWhoTookTrump.tricks) * (state.rounds.at(-1)?.roundPot ?? 0);
-                    }
-                    //all other players who got 0 tricks must add the amount of the round pot to the new round pot
-                    state.players.filter(player => player.tricks === 0).forEach(player => {
-                        newRoundPot += (state.rounds.at(-1)?.roundPot ?? 0);
-                        player.bank -= (state.rounds.at(-1)?.roundPot ?? 0);
-                    });
-                    // all players divide the amount of the round pot by the number of tricks they got and add to their bank
-                    state.players.forEach(player => {
-                        player.bank += state.rounds[state.currentRound].roundPot / player.tricks;
-                    });
-                    const newRound: Round = {
-                        roundNumber: currentRound.roundNumber + 1,
-                        roundPot: newRoundPot,
-                        //dealer is next id in players array after current dealer:
-                        dealer: state.players[(state.players.findIndex(p => p.isDealer) + 1) % state.players.length].id ,
-                        playersInRound: state.rounds[state.currentRound].playersInRound,
-                        hiddenTrumpSuit: false,
-                        firstTwoCards: false,
-                        secondTwoCards: false,
-                        roundState: 'Initial',
-                        initialized: false,
-                        trumpSuit: undefined,
-                        turns: [],
-                        trumpForSale: true,
-                        dealerTookTrump: false,
-                        playerTookTrump: undefined,
-                    }
-                    //Add new round to rounds
-                    state.rounds.push(newRound);
-                    state.currentRound++;
-
-                    const newCurrentRound = state.rounds[state.currentRound];
-
-                    newCurrentRound.turns.push({
-                        nextPlayer: state.players[newCurrentRound.dealer!], // Add '!' to assert that 'dealer' is not undefined
-                        winner: undefined,
-                        cardsPlayed: [],
-                        suit: undefined,
-                    });
-                    newCurrentRound.initialized = true;
-
-                } else {
+                    //there are only 4 turns in a round
+                 if (currentRound.turns.length < 4) {
                     //After winner is found, start new turn
                     currentRound.turns.push({
-                        nextPlayer: winner.player,
+                        nextPlayer: winner.playerId,
                         winner: undefined,
                         cardsPlayed: [],
                         suit: undefined,
                     });
+                } else {
+                    //Set game state roundSettled
+                    state.rounds[state.currentRound].roundState = 'RoundOver';
                 }
             }
+        },
+        endRound(state) {
+            const currentRound = state.rounds[state.currentRound];
+            if (currentRound.turns.length > 3 && currentRound.roundState === 'RoundOver') {
+                //End round
+                let newRoundPot = 0;
+                //Calculate points and add to winner
+                // if player who took trump got less than 2 tricks, the player must add the amount of the round pot (times 2 if 0 tricks) to the new round pot
+                const playerWhoTookTrump = state.players.find(player => player.hasTakenTrump);
+                if (playerWhoTookTrump && playerWhoTookTrump.tricks < 2) {
+                    newRoundPot += (2 - playerWhoTookTrump.tricks) * (state.rounds.at(-1)?.roundPot ?? 0);
+                    playerWhoTookTrump.bank -= (2 - playerWhoTookTrump.tricks) * (state.rounds.at(-1)?.roundPot ?? 0);
+                }
+                //all other players who got 0 tricks must add the amount of the round pot to the new round pot
+                state.players.filter(player => player.tricks === 0 && player.id !== playerWhoTookTrump?.id).forEach(player => {
+                    newRoundPot += (state.rounds.at(-1)?.roundPot ?? 0);
+                    player.bank -= (state.rounds.at(-1)?.roundPot ?? 0);
+                });
+                // all players divide the amount of the round pot by the number of tricks they got and add to their bank
 
+
+                const newRound: Round = {
+                    roundNumber: currentRound.roundNumber + 1,
+                    roundPot: newRoundPot,
+                    //dealer is next id in players array after current dealer:
+                    dealer: state.players[(state.players.findIndex(p => p.isDealer) + 1) % state.players.length].id ,
+                    playersInRound: state.rounds[state.currentRound].playersInRound,
+                    hiddenTrumpSuit: false,
+                    firstTwoCards: false,
+                    secondTwoCards: false,
+                    roundState: 'Initial',
+                    initialized: false,
+                    trumpSuit: undefined,
+                    turns: [],
+                    trumpForSale: true,
+                    dealerTookTrump: false,
+                    playerTookTrump: undefined,
+                }
+                state.players.forEach(player => {
+                    player.bank += state.rounds[state.currentRound].roundPot / 4 * player.tricks;
+                    player.hand = [];
+                    player.tricks = 0;
+                    player.hasFolded = false;
+                    player.isDealer = false;
+                    player.isSmallBlind = false;
+                    player.hasExchangedCards = false;
+                    player.isDeclarer = false;
+                    player.hasTakenTrump = false;
+                    player.hasTakenTrumpEarly = false;
+                });
+                //Add new round to rounds
+                state.rounds.push(newRound);
+                state.currentRound++;
+                currentRound.roundState = 'RoundOver';
+
+                const newCurrentRound = state.rounds[state.currentRound];
+
+                newCurrentRound.turns.push({
+                    nextPlayer: state.players[newCurrentRound.dealer!].id, // Add '!' to assert that 'dealer' is not undefined
+                    winner: undefined,
+                    cardsPlayed: [],
+                    suit: undefined,
+                });
+                newCurrentRound.initialized = true;
+            }
         }
     },
 
 });
 
 
-export const {setDealer , setTrumpSuit, initializeGame, dealCards, toggleSelectCard, newRound, exchangeCards, addWager, playCard, takeTrump, takeTrumpEarly, refuseTrump, playerFolds, playerIsIn, discardCard } = gameSlice.actions;
+export const {
+    setDealer ,
+    setTrumpSuit,
+    initializeGame,
+    dealCards,
+    toggleSelectCard,
+    newRound,
+    exchangeCards,
+    addWager,
+    playCard,
+    takeTrump,
+    takeTrumpEarly,
+    refuseTrump,
+    playerFolds,
+    playerIsIn,
+    discardCard,
+    endRound
+} = gameSlice.actions;
 
 export const selectGame = (state: { game: Game }) => state.game;
 export const selectPlayers = (state: { game: Game }) => state.game.players;
 export const selectPlayer = (state: { game: Game }, playerId: number) => {
     return state.game.players.find(player => player.id === playerId);
 }
+export const selectDeck = (state: { game: Game }) => state.game.deck;
+export const selectDiscardedCards = (state: { game: Game }) => state.game.discardedCards;
+export const selectCard = (state: { game: Game }, cardId: number) => {
+    return state.game.deck.find(card => card.id === cardId);
+}
 
 export const gameInitialized = (state: { game: Game }) => state.game.initialized;
 export const roundInitialized = (state: { game: Game }) => state.game.rounds[state.game.currentRound].initialized;
 export const selectTrumpSuit = (state: { game: Game }) => state.game.rounds[state.game.currentRound].trumpSuit;
 export const selectTrumpSuitHidden = (state: { game: Game }) => state.game.rounds[state.game.currentRound].hiddenTrumpSuit;
-export const selectRound = (state: { game: Game }) => state.game.rounds[state.game.currentRound];
+export const selectRound = (state: { game: Game }) => state.game.rounds.at(-1);
 export const selectDealer = (state: { game: Game }) => state.game.players.find(player => player.isDealer);
 export const selectCurrentTurnNumber = (state: { game: Game }) => state.game.rounds[state.game.currentRound].turns.length;
 export const selectRoundPot = (state: { game: Game }) => state.game.rounds[state.game.currentRound].roundPot;
@@ -764,38 +788,61 @@ export const isPlayersTurn = (state: { game: Game }, playerId: number) => {
     if (!currentTurn) {
         return false;
     }
-    return currentTurn.nextPlayer?.id === playerId;
+    return currentTurn.nextPlayer === playerId;
 }
-export const isCardPlayable = (state: { game: Game }, card: Card) => {
+export const isCardPlayable = (state: { game: Game }, cardId: number) => {
     const currentRound = state.game.rounds[state.game.currentRound];
+
+    //Current turn might be empty if not all players have exchanged cards
     const currentTurn = currentRound.turns.at(-1);
     if (!currentTurn) {
+        console.warn('No current turn');
         return false;
     }
+    const nextPlayer = state.game.players.find(player => player.id === currentTurn?.nextPlayer);
+    const card = state.game.deck.find(card => card.id === cardId);
+    if (card?.isPlayed) {
+        console.warn('Card is already played');
+        return false;
+    }
+
+    if(nextPlayer?.hasFolded) {
+        console.warn('Player has folded');
+        return false;
+    }
+
     //Card can be played if it is the players turn. The card should follow the suit led if the player has a card of the suit led. If the player does not have a card of the suit led, the player can play any card. But must try to win the trick if possible. For example, if the player has a trump card, the player cant play other cards if the trump is higher than other trumps played.
-    if (currentTurn.nextPlayer?.hand.find(c => c.id === card.id)) {
+    if (nextPlayer?.hand.some(c => c === cardId)) {
         if (currentTurn.cardsPlayed.length === 0) {
             return true;
         }
         const suitLed = currentTurn.suit;
-        const player = currentTurn.nextPlayer;
-        const cardOfSuitLed = player.hand.find(c => c.suit === suitLed);
-        if (cardOfSuitLed && card.suit !== suitLed) {
+
+        const cardOfSuitLed = nextPlayer.hand.some(c => {
+            const card = state.game.deck.find(card => card.id === c);
+            if (card && card.suit === suitLed) {
+                return true;
+            }
+            return false;
+        })
+
+        if (cardOfSuitLed && card?.suit !== suitLed) {
             return false;
         }
-        if (cardOfSuitLed && card.suit === suitLed) {
+        if (cardOfSuitLed && card?.suit === suitLed) {
             return true;
         }
         if (!cardOfSuitLed) {
             return true;
         }
     }
-
+    console.warn('Card not found in hand', nextPlayer?.id, card, nextPlayer?.hand);
+    return false;
 }
 export const selectPlayerWhoShouldExchangeCards = (state: { game: Game }) => {
     //the first player to exchange cards is the player who took the trump
     const playerTookTrump = state.game.players.find(player => player.hasTakenTrump) as Player | undefined;
-    state.game.players.forEach(player => console.log('player', player.id, player.hasTakenTrump, player.hasExchangedCards));
+
     if (playerTookTrump && !playerTookTrump.hasExchangedCards) {
         return playerTookTrump;
     }
