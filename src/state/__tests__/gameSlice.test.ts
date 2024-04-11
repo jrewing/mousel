@@ -1,5 +1,5 @@
 import { configureStore, Store } from '@reduxjs/toolkit';
-import gameReducer, { initializeGame, setDealer, dealCards, setTrumpSuit, toggleSelectCard, exchangeCards, addWager, playCard, selectPlayerWhoShouldExchangeCards, selectPlayerWhoCanTakeTrump, refuseTrump, playerFolds, takeTrump, playerIsIn, selectCurrentTurn, endRound, isCardPlayable, takeTrumpEarly } from '../gameSlice';
+import gameReducer, { initializeGame, setDealer, dealCards, setTrumpSuit, toggleSelectCard, exchangeCards, addWager, playCard, selectPlayerWhoShouldExchangeCards, selectPlayerWhoCanTakeTrump, refuseTrump, playerFolds, takeTrump, playerIsIn, selectCurrentTurn, endRound, isCardPlayable, takeTrumpEarly, selectPlayerWhoCanFoldOrStay } from '../gameSlice';
 import { RootState } from '../store';
 import { Player } from '../../Types';
 import exp from 'constants';
@@ -139,6 +139,7 @@ async function setupAndDealCards() {
     it('should handle selecting a card', async () => {
         let state = await dispatchAndGetState(initializeGame(numberOfPlayers));
         state = await setupAndDealCards();
+        state = await dispatchAndGetState(playerIsIn(state.players[0].id));
         expect(state.players.length).toEqual(5);
         const player = state.players[0];
         const cardId = player.hand[0];
@@ -158,7 +159,7 @@ async function setupAndDealCards() {
         state = await dispatchAndGetState(takeTrump(leadPlayer.id));
         let player = state.players[0];
         let cardId = player.hand[0];
-
+        state = await dispatchAndGetState(playerIsIn(state.players[0].id));
         state = await dispatchAndGetState(toggleSelectCard(cardId));
         player = state.players[0];
         const selectedCard = state.deck.find(card => card.id === cardId);
@@ -195,8 +196,12 @@ async function setupAndDealCards() {
         const playerWhoTookTrump = state.players.find(player => player.hasTakenTrump === true);
 
         expect(playerWhoTookTrump).toBeDefined();
+        const playerWhoCanFold = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold).toBeDefined();
 
         state = await dispatchAndGetState(exchangeCards(playerWhoTookTrump as Player)); // Add type assertion
+
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold?.id ?? 0)); // Add nullish coalescing operator
 
         const exchanger2 = selectPlayerWhoShouldExchangeCards(store.getState());
 
@@ -210,6 +215,23 @@ async function setupAndDealCards() {
         state = await setupAndDealCards();
         const leadPlayer = state.players[2];
         state = await dispatchAndGetState(takeTrump(leadPlayer.id));
+
+        const playerWhoCanFold1 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold1).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold1?.id ?? 0));
+        const playerWhoCanFold2 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold2).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold2?.id ?? 0));
+        const playerWhoCanFold3 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold3).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold3?.id ?? 0));
+        const playerWhoCanFold4 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold4).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold4?.id ?? 0));
+        const playerWhoCanFold5 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold5).not.toBeDefined();
+
+
         const player = state.players[0];
         const cardId = player.hand[0];
         state = await dispatchAndGetState(toggleSelectCard(cardId));
@@ -217,6 +239,7 @@ async function setupAndDealCards() {
         for (const player of state.players) {
             state = await dispatchAndGetState(exchangeCards(player));
         }
+
         expect(cardId).not.toBe(state.players[0].hand[0])
         const firstCardPlayed = state.deck.find(c => c.id === state.players[2].hand[0]);
         state = await dispatchAndGetState(playCard({ playerId: state.players[2].id, cardId: firstCardPlayed?.id ?? 0 }));
@@ -232,6 +255,22 @@ async function setupAndDealCards() {
         expect(whoCanTakeTrump).toBeDefined();
         expect(whoCanTakeTrump?.id).toEqual(state.players[2].id);
         state = await dispatchAndGetState(takeTrump(whoCanTakeTrump?.id));
+
+        const playerWhoCanFold1 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold1).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold1?.id ?? 0));
+        const playerWhoCanFold2 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold2).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold2?.id ?? 0));
+        const playerWhoCanFold3 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold3).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold3?.id ?? 0));
+        const playerWhoCanFold4 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold4).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold4?.id ?? 0));
+        const playerWhoCanFold5 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold5).not.toBeDefined();
+
         const currentTurn = selectCurrentTurn({ game: state });
         for (const player of state.players) {
             state = await dispatchAndGetState(exchangeCards(player));
@@ -319,8 +358,26 @@ async function setupAndDealCards() {
         expect(whoCanTakeTrump).toBeDefined();
         expect(whoCanTakeTrump?.id).toEqual(state.players[2].id);//how do we know who should take trump?
         state = await dispatchAndGetState(takeTrump(whoCanTakeTrump.id));
+
+        const playerWhoCanFold1 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold1).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold1?.id ?? 0));
+        const playerWhoCanFold2 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold2).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold2?.id ?? 0));
+        const playerWhoCanFold3 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold3).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold3?.id ?? 0));
+        const playerWhoCanFold4 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold4).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold4?.id ?? 0));
+        const playerWhoCanFold5 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold5).not.toBeDefined();
+
         for (const player of state.players) {
-            state = await dispatchAndGetState(exchangeCards(player));
+            const playerWhoCanExchange = selectPlayerWhoShouldExchangeCards(store.getState());
+            expect(playerWhoCanExchange).toBeDefined();
+            state = await dispatchAndGetState(exchangeCards(playerWhoCanExchange as Player));
         }
         //get current round because it changes after final turn
         const currentRound = state.currentRound;
@@ -385,11 +442,30 @@ async function setupAndDealCards() {
         expect(whoCanTakeTrump?.id).toEqual(state.players[2].id);//how do we know who should take trump?
         state = await dispatchAndGetState(takeTrump(whoCanTakeTrump.id));
 
-        state = await dispatchAndGetState(exchangeCards(state.players[2]));
-        state = await dispatchAndGetState(playerFolds(state.players[3].id));
-        state = await dispatchAndGetState(exchangeCards(state.players[4]));
-        state = await dispatchAndGetState(exchangeCards(state.players[0]));
-        state = await dispatchAndGetState(exchangeCards(state.players[1]));
+        const playerWhoCanFold1 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold1).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold1?.id ?? 0));
+        const playerWhoCanFold2 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold2).toBeDefined();
+        state = await dispatchAndGetState(playerFolds(playerWhoCanFold2?.id ?? 0));
+        const playerWhoCanFold3 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold3).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold3?.id ?? 0));
+        const playerWhoCanFold4 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold4).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold4?.id ?? 0));
+        const playerWhoCanFold5 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold5).not.toBeDefined();
+
+        for (const player of state.players) {
+            const playerWhoCanExchange = selectPlayerWhoShouldExchangeCards(store.getState());
+            state = await dispatchAndGetState(exchangeCards(playerWhoCanExchange as Player));
+        }
+        //expect all players to have exchanged cards
+        for (const player of state.players.filter(p => p.isIn)) {
+            expect(player.hasExchangedCards).toEqual(true);
+        }
+
         //get current round because it changes after final turn
         const currentRound = state.currentRound;
         const playersInRound = state.players.filter(p => p.isIn && !p.hasFolded);
@@ -410,13 +486,12 @@ async function setupAndDealCards() {
             const startIndex = playersInRound.findIndex(player => player.id === startingPlayer?.id);
             // rearrange players so that the starting player is first
             const orderedPlayers = playersInRound.slice(startIndex).concat(playersInRound.slice(0, startIndex));
-            console.log(orderedPlayers, i);
+
             for (const player of orderedPlayers) {
                 //find card that is playable
                 let aCardPlayable = false;
                 for (const cardId of player.hand) {
                     if (isCardPlayable(store.getState(), cardId)) {
-                        console.log('card is playable');
                         aCardPlayable = true;
                         state = await dispatchAndGetState(playCard({ playerId: player.id, cardId: cardId }));
                         break;
@@ -467,5 +542,186 @@ async function setupAndDealCards() {
             const dealerAfter = state.players.find(player => player.isDealer);
             expect(dealerAfter?.hand.length).toEqual(5);
 
+    })
+    it('should go through 4 turns 1 player folds and end the round dividing the pot to the players. Then continuing and play another round', async() => {
+        let state = await dispatchAndGetState(initializeGame(numberOfPlayers));
+        state = await setupAndDealCards();
+        const whoCanTakeTrump = selectPlayerWhoCanTakeTrump(store.getState()) as Player; // Add type assertion
+        expect(whoCanTakeTrump).toBeDefined();
+        expect(whoCanTakeTrump?.id).toEqual(state.players[2].id);//how do we know who should take trump?
+        state = await dispatchAndGetState(takeTrump(whoCanTakeTrump.id));
+
+        const playerWhoCanFold1 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold1).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold1?.id ?? 0));
+        const playerWhoCanFold2 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold2).toBeDefined();
+        state = await dispatchAndGetState(playerFolds(playerWhoCanFold2?.id ?? 0));
+        const playerWhoCanFold3 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold3).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold3?.id ?? 0));
+        const playerWhoCanFold4 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold4).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFold4?.id ?? 0));
+        const playerWhoCanFold5 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFold5).not.toBeDefined();
+
+        for (const player of state.players) {
+            const playerWhoCanExchange = selectPlayerWhoShouldExchangeCards(store.getState());
+            state = await dispatchAndGetState(exchangeCards(playerWhoCanExchange as Player));
+        }
+        //expect all players to have exchanged cards
+        for (const player of state.players.filter(p => p.isIn)) {
+            expect(player.hasExchangedCards).toEqual(true);
+        }
+
+        //get current round because it changes after final turn
+        const currentRound = state.currentRound;
+        const playersInRound = state.players.filter(p => p.isIn && !p.hasFolded);
+        expect(state.rounds[currentRound].roundPot).toBe(4);
+         //play 4 turns.
+        for (let i = 0; i < 4; i++) {
+            const currentTurn = selectCurrentTurn(store.getState());
+            expect(state.rounds[currentRound].turns.length).toBe(i+1);
+            //the player who took the trump should start the first turn. then the winner of the last turn should start the next turn
+
+            //const currentState = state; // Create a variable to store the value of 'state'
+            const startingPlayerId = currentTurn?.nextPlayer //|| state.players[whoCanTakeTrump.id].id;
+            expect(startingPlayerId).toBeDefined();
+            const startingPlayer = state.players.find(player => player.id === startingPlayerId);
+
+            expect(startingPlayer?.hasFolded).toBeFalsy();
+                // Find the index of the startingPlayer
+            const startIndex = playersInRound.findIndex(player => player.id === startingPlayer?.id);
+            // rearrange players so that the starting player is first
+            const orderedPlayers = playersInRound.slice(startIndex).concat(playersInRound.slice(0, startIndex));
+
+            for (const player of orderedPlayers) {
+                //find card that is playable
+                let aCardPlayable = false;
+                for (const cardId of player.hand) {
+                    if (isCardPlayable(store.getState(), cardId)) {
+                        aCardPlayable = true;
+                        state = await dispatchAndGetState(playCard({ playerId: player.id, cardId: cardId }));
+                        break;
+                    }
+                }
+                expect(state.rounds[currentRound].turns[i].suit).toBeDefined();
+                expect(aCardPlayable).toEqual(true);
+            }
+            // Check the state after each full round of turns
+            expect(state.rounds[currentRound].turns[i].cardsPlayed.length).toEqual(playersInRound.length);
+            //expect current turn winner to be defined
+            expect(state.rounds[currentRound].turns[i].winner).toBeDefined();
+
+            //get the winning player from state current turn
+            const winnerPlayer = state.players.find(player => player.id === state.rounds[currentRound].turns[i].winner);
+
+            expect(winnerPlayer?.tricks).toBeDefined();
+            //we expect the winner to have one more trick than the previous turn
+            expect(winnerPlayer?.tricks).toBeGreaterThan(0);
+        }
+        expect(state.rounds[currentRound].turns.length).toEqual(4);
+        expect(state.rounds[currentRound].roundState).toEqual('RoundOver');
+        //dispatch endRound
+        state = await dispatchAndGetState(endRound());
+
+        //expect the a new round to be created
+        expect(state.rounds.length).toEqual(2);
+        for (const player of state.players) {
+            expect(player.hand.length).toEqual(0);
+            expect(player.bank).toBeGreaterThan(190);
+            expect(player.bank).toBeLessThan(205);
+            expect(player.bank).not.toBe(Infinity);
+        }
+
+        const newRound = state.rounds[state.currentRound];
+        expect(newRound.roundState).toEqual('Initial');
+        state = await setupAndDealCards();
+        const whoCanTakeTrumpRound2 = selectPlayerWhoCanTakeTrump(store.getState()) as Player; // Add type assertion
+        expect(whoCanTakeTrumpRound2).toBeDefined();
+        expect(whoCanTakeTrumpRound2?.id).toEqual(state.players[2].id);//how do we know who should take trump?
+        state = await dispatchAndGetState(takeTrump(whoCanTakeTrumpRound2.id));
+
+        const playerWhoCanFoldRound21 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFoldRound21).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFoldRound21?.id ?? 0));
+        const playerWhoCanFoldRound22 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFoldRound22).toBeDefined();
+        state = await dispatchAndGetState(playerFolds(playerWhoCanFoldRound22?.id ?? 0));
+        const playerWhoCanFoldRound23 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFoldRound23).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFoldRound23?.id ?? 0));
+        const playerWhoCanFoldRound24 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFoldRound24).toBeDefined();
+        state = await dispatchAndGetState(playerIsIn(playerWhoCanFoldRound24?.id ?? 0));
+        const playerWhoCanFoldRound25 = selectPlayerWhoCanFoldOrStay(store.getState());
+        expect(playerWhoCanFoldRound25).not.toBeDefined();
+
+        for (const player of state.players) {
+            const playerWhoCanExchange = selectPlayerWhoShouldExchangeCards(store.getState());
+            state = await dispatchAndGetState(exchangeCards(playerWhoCanExchange as Player));
+        }
+        //expect all players to have exchanged cards
+        for (const player of state.players.filter(p => p.isIn)) {
+            expect(player.hasExchangedCards).toEqual(true);
+        }
+
+        //get current round because it changes after final turn
+        const currentRoundRound2 = state.currentRound;
+        const playersInRoundRound2 = state.players.filter(p => p.isIn && !p.hasFolded);
+        expect(state.rounds[currentRoundRound2].roundPot).toBeGreaterThan(4);
+         //play 4 turns.
+        for (let i = 0; i < 4; i++) {
+            const currentTurn = selectCurrentTurn(store.getState());
+            expect(currentTurn).toBeDefined();
+            expect(state.rounds[currentRoundRound2].turns.length).toBe(i+1);
+            //the player who took the trump should start the first turn. then the winner of the last turn should start the next turn
+
+            //const currentState = state; // Create a variable to store the value of 'state'
+            const startingPlayerId = currentTurn?.nextPlayer //|| state.players[whoCanTakeTrump.id].id;
+            expect(startingPlayerId).toBeDefined();
+            const startingPlayer = state.players.find(player => player.id === startingPlayerId);
+
+            expect(startingPlayer?.hasFolded).toBeFalsy();
+                // Find the index of the startingPlayer
+            const startIndex = playersInRoundRound2.findIndex(player => player.id === startingPlayer?.id);
+            // rearrange players so that the starting player is first
+            const orderedPlayers = playersInRoundRound2.slice(startIndex).concat(playersInRoundRound2.slice(0, startIndex));
+            for (const player of orderedPlayers) {
+                //find card that is playable
+                let aCardPlayable = false;
+                for (const cardId of player.hand) {
+                    if (isCardPlayable(store.getState(), cardId)) {
+                        aCardPlayable = true;
+                        state = await dispatchAndGetState(playCard({ playerId: player.id, cardId: cardId }));
+                        break;
+                    }
+                }
+                expect(state.rounds[currentRoundRound2].turns[i].suit).toBeDefined();
+                expect(aCardPlayable).toEqual(true);
+            }
+            // Check the state after each full round of turns
+            expect(state.rounds[currentRoundRound2].turns[i].cardsPlayed.length).toEqual(playersInRoundRound2.length);
+            //expect current turn winner to be defined
+            expect(state.rounds[currentRoundRound2].turns[i].winner).toBeDefined();
+
+            //get the winning player from state current turn
+            const winnerPlayer = state.players.find(player => player.id === state.rounds[currentRoundRound2].turns[i].winner);
+
+            expect(winnerPlayer?.tricks).toBeDefined();
+            //we expect the winner to have one more trick than the previous turn
+            expect(winnerPlayer?.tricks).toBeGreaterThan(0);
+        }
+        expect(state.rounds[currentRoundRound2].turns.length).toEqual(4);
+        expect(state.rounds[currentRoundRound2].roundState).toEqual('RoundOver');
+        //dispatch endRound
+        state = await dispatchAndGetState(endRound());
+
+        //expect the a new round to be created
+        expect(state.rounds.length).toEqual(3);
+
+        const newRoundRound2 = state.rounds[state.currentRound];
+        expect(newRoundRound2.roundState).toEqual('Initial');
     })
 })

@@ -26,9 +26,6 @@ const GameComponent: React.FC<GameComponentProps> = () => {
 
     return (
         <div>
-            <div>
-                <button disabled={round?.roundState !== '2Cards' || trumpSuit !== undefined} onClick={() => setTrumpSuitHandler()}>Set Trump Suit</button>
-            </div>
             <div className="game-container">
                 <div className="player-container">
                     {game.players.map((player, index) => (

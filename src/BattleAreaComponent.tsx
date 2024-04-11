@@ -1,5 +1,5 @@
 import React from 'react';
-import { endRound, selectCurrentTurn, selectCurrentTurnNumber, selectGame, selectRound, selectTrumpSuit } from './state/gameSlice';
+import { calculateWinner, endRound, selectCurrentTurn, selectCurrentTurnNumber, selectGame, selectRound, selectTrumpSuit } from './state/gameSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
 interface BattleAreaComponentProps {
@@ -16,12 +16,15 @@ const dispatch = useDispatch();
     const game = useSelector(selectGame);
     const players = game.players;
     const winner = players.find(player => player.id === currentTurn?.winner)
+    const deck = game.deck
 
     const newRoundHandler = () => {
         console.log('New round')
         //dispatch(newRound())
         dispatch(endRound())
     }
+
+    const currentWinnerCard = trumpSuit && currentTurn && currentTurn.cardsPlayed.length > 0 ? calculateWinner(trumpSuit?.suit, currentTurn, deck) : undefined
 
     return (
         <div id="battleArea">
@@ -43,8 +46,9 @@ const dispatch = useDispatch();
                 {currentTurn && currentTurn.cardsPlayed.map((cardPlayer, index) => {
                     const card = game.deck.find(c => c.id === cardPlayer.cardId)
 
-                    return (<div key={index}>
-                        {card?.value} of {card?.suit}
+                    return (
+                    <div key={index} style={card?.id === currentWinnerCard?.cardId ? { backgroundColor: 'green' } : {}}>
+                        {card?.name} of {card?.suit}
                     </div>)
                 }
                 )}

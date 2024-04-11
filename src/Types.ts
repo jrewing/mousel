@@ -43,10 +43,10 @@ export type Turn = {
 
 export type Card = {
     suit: Suit,
-    value: Value,
+    name: Value,
+    value: number,
     suitSymbol: SuitSymbol,
     color: Color,
-    isSelectable: boolean,
     isFresh: boolean,
     isSelected: boolean,
     isPlayed: boolean,
