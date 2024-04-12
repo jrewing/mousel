@@ -92,12 +92,11 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({playerId}) => {
         && (round.roundPot >= (game.numberOfPlayers - 1)))
         || (round?.roundState === '2Cards' && trumpSuit !== undefined)
     console.log('PlayerComponent', player)
+    console.log('PlayerComponent playerWhoShouldExcangeCards', playerWhoShouldExcangeCards?.id)
     return (
         <div>
             { player?.hand.map((cardId, index: number) => {
-
                 const card = deck.find((c) => c.id === cardId)
-                console.log('Card', card)
                 return card && !card.isDiscarded && !card.isPlayed && <CardComponent key={index} card={card} player={player} />
             })}
             <div>{player?.name}</div>

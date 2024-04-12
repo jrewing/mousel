@@ -32,7 +32,6 @@ const CardComponent: React.FC<CardComponentProps> = (
     }
 
     const playCardHandler = () => {
-        console.log('Playing card')
         dispatch(playCard({cardId: card.id, playerId: player.id}))
     }
 
@@ -50,9 +49,6 @@ const CardComponent: React.FC<CardComponentProps> = (
     const toString = () => {
         return `${card.name} of ${card.suit}`;
     }
-
-
-    console.log('CardComponent', card)
 
     return (
     <div>

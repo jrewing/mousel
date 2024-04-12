@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Card, Player, Suit, Game, SuitSymbol, Value, Round, Turn } from '../Types'
+import { is } from '@babel/types';
 
 
 // Step 1: Define the initial state
@@ -9,7 +10,6 @@ const initialState: Game = {
     discardedCards: [],
     currentRound: 0,
     currentTurn: undefined,
-    isGameOver: false,
     numberOfPlayers: 0,
     rounds: [],
     initialized: false,
@@ -110,141 +110,53 @@ export function calculateWinner(trumpSuit: Suit, currentTurn: Turn, deck: Card[]
         console.error('currentTurn.cardsPlayed is undefined');
         return;
     }
+
     //Find winner. Winning card is the highest card of the suit led or the highest trump card
-                const winner = currentTurn.cardsPlayed.reduce((prev, current) => {
+    const winner = currentTurn.cardsPlayed.reduce((prev, current) => {
+        const prevCard = deck.find(card => card.id === prev.cardId);
+        const currentCard = deck.find(card => card.id === current.cardId);
 
-                    const prevCard = deck.find(card => card.id === prev.cardId);
-                    const currentCard = deck.find(card => card.id === current.cardId);
+        if (prevCard && currentCard) {
+            // Check if both cards are trumps
+            if (prevCard.suit === trumpSuit && currentCard.suit === trumpSuit) {
+                // Compare the values of the trump cards
+                return prevCard.value > currentCard.value ? prev : current;
+            }
 
-                    if (prevCard && currentCard) {
-                    // Check if both cards are trumps
-                    if (prevCard.suit === trumpSuit && currentCard.suit === trumpSuit) {
-                        // Compare the values of the trump cards
-                        return compareCardValues(prevCard, currentCard) ? prev : current;
-                    }
+            // Check if the current card is a trump and the previous card is not
+            if (currentCard.suit === trumpSuit && prevCard.suit !== trumpSuit) {
+                return current;
+            }
 
-                    // Check if the current card is a trump and the previous card is not
-                    if (currentCard.suit === trumpSuit && prevCard.suit !== trumpSuit) {
-                        return current;
-                    }
+            // Check if the previous card is a trump and the current card is not
+            if (prevCard.suit === trumpSuit && currentCard.suit !== trumpSuit) {
+                return prev;
+            }
 
-                    // Check if the previous card is a trump and the current card is not
-                    if (prevCard.suit === trumpSuit && currentCard.suit !== trumpSuit) {
-                        return prev;
-                    }
-                        if (prevCard.suit === currentTurn.suit && currentCard.suit === currentTurn.suit) {
-                            if (prevCard.name === 'Ace' && currentCard.name === 'Ace') {
-                                return prev;
-                            }
-                            if (prevCard.name === 'Ace') {
-                                return prev;
-                            }
-                            if (currentCard.name === 'Ace') {
-                                return current;
-                            }
-                            if (prevCard.name === 'King' && currentCard.name === 'King') {
-                                return prev;
-                            }
-                            if (prevCard.name === 'King') {
-                                return prev;
-                            }
-                            if (currentCard.name === 'King') {
-                                return current;
-                            }
-                            if (prevCard.name === 'Queen' && currentCard.name === 'Queen') {
-                                return prev;
-                            }
-                            if (prevCard.name === 'Queen') {
-                                return prev;
-                            }
-                            if (currentCard.name === 'Queen') {
-                                return current;
-                            }
-                            if (prevCard.name === 'Jack' && currentCard.name === 'Jack') {
-                                return prev;
-                            }
-                            if (prevCard.name === 'Jack') {
-                                return prev;
-                            }
-                            if (currentCard.name === 'Jack') {
-                                return current;
-                            }
-                            if (prevCard.name === 10 && currentCard.name === 10) {
-                                return prev;
-                            }
-                            if (prevCard.name === 10) {
-                                return prev;
-                            }
-                            if (currentCard.name === 10) {
-                                return current;
-                            }
-                            if (prevCard.name === 9 && currentCard.name === 9) {
-                                return prev;
-                            }
-                            if (prevCard.name === 9) {
-                                return prev;
-                            }
-                            if (currentCard.name === 9) {
-                                return current;
-                            }
-                            if (prevCard.name === 8 && currentCard.name === 8) {
-                                return prev;
-                            }
-                            if (prevCard.name === 8) {
-                                return prev;
-                            }
-                            if (currentCard.name === 8) {
-                                return current;
-                            }
-                            if (prevCard.name === 7 && currentCard.name === 7) {
-                                return prev;
-                            }
-                            if (prevCard.name === 7) {
-                                return prev;
-                            }
-                            if (currentCard.name === 7) {
-                                return current;
-                            }
-                            if (prevCard.name === 6 && currentCard.name === 6) {
-                                return prev;
-                            }
-                            if (prevCard.name === 6) {
-                                return prev;
-                            }
-                            if (currentCard.name === 6) {
-                                return current;
-                            }
-                            if (prevCard.name === 5 && currentCard.name === 5) {
-                                return prev;
-                            }
-                            if (prevCard.name === 5) {
-                                return prev;
-                            }
-                            if (currentCard.name === 5) {
-                                return current;
-                            }
-                        } else if (prevCard.suit === currentTurn.suit && currentCard.suit !== currentTurn.suit) {
-                            return prev;
-                        }
-                        return current;
-                    }
-                    return prev;
-                });
-                return winner;
+            // If both cards are of the suit led, compare their values
+            if (prevCard.suit === currentTurn.suit && currentCard.suit === currentTurn.suit) {
+                return prevCard.value > currentCard.value ? prev : current;
+            }
+        }
+
+        return prev;
+    }, currentTurn.cardsPlayed[0]);
+
+    return winner;
 }
-
 
 // Step 2: Create the slice
 const gameSlice = createSlice({
     name: 'game',
     initialState,
     reducers: {
-        // Step 3: Define reducers
-        initializeGame(state, action: PayloadAction<number>) {
-            state.numberOfPlayers = action.payload;
-            // Add logic to initialize players, deck, etc.
-            state.players = createPlayers(state.numberOfPlayers);
-            //state.deck = createDeck();
+        initializeGame(state: Game, action: PayloadAction<number>) {
+            const { payload: numberOfPlayers } = action;
+            if (numberOfPlayers < 2) {
+                throw new Error('A minimum of two players is required to start the game.');
+            }
+            state.numberOfPlayers = numberOfPlayers;
+            state.players = createPlayers(numberOfPlayers);
             state.deck = shuffleDeck(createDeck());
             state.currentRound = 0;
             state.rounds = [initialRoundState];
@@ -291,7 +203,6 @@ const gameSlice = createSlice({
                     return;
                 }
             }
-
             //If roundState is 2Cards, but trumpsuit is not set, issue warning and return
             if (state.rounds[state.currentRound].roundState === '2Cards' && state.rounds[state.currentRound].trumpSuit === undefined) {
                 console.warn('DealCards: Can not deal next two cards until trump suit is set.');
@@ -545,6 +456,16 @@ const gameSlice = createSlice({
                 }
                 return player;
             })
+            //If only one player is left in the game, set winner to that player
+            //only 1 player isIn and the rest has folded
+            if ((state.players.filter(player => player.isIn).length === 1) && state.players.filter(player => player.hasFolded).length === state.players.length - 1) {
+                //set winner to the player who is still in, same as player who took trump
+                const winner = state.players.find(player => player.isIn);
+                if (winner) {
+                    winner.tricks = 4
+                    state.rounds[state.currentRound].roundState = 'GameOver';
+                }
+            }
         },
         playerIsIn(state, action: PayloadAction<number>) {
             state.players = state.players.map(player => {
@@ -605,7 +526,6 @@ const gameSlice = createSlice({
             }
 
             const currentRound = state.rounds[state.currentRound];
-            // currentTurn is the last turn in the turns array
             const currentTurn = currentRound.turns.at(-1);
 
             //Trump suit must have been set and a player must have taken trump before cards can be played
@@ -630,12 +550,12 @@ const gameSlice = createSlice({
                 return
             }
 
-               state.deck = state.deck.map(c => {
-                    if (c.id === card.id) {
-                        return { ...c, isPlayed: true };
-                    }
-                    return c;
-                });
+            state.deck = state.deck.map(c => {
+                if (c.id === card.id) {
+                    return { ...c, isPlayed: true };
+                }
+                return c;
+            });
 
             if (currentTurn && currentTurn?.cardsPlayed.length < playersInRound.length) {
                 if (currentTurn.cardsPlayed.length === 0) {
@@ -650,11 +570,9 @@ const gameSlice = createSlice({
                 //I think this is an error state
                 console.warn('no current turn');
             }
-                //if all players who are in and not folded have played a card, end turn
-
+            //if all players who are in and not folded have played a card, end turn
             if (currentTurn && currentTurn.cardsPlayed && currentTurn?.cardsPlayed?.length >= playersInRound.length) {
                 const winner = calculateWinner(currentRound.trumpSuit.suit, currentTurn, state.deck);
-
                 //Add trick to winner
                 const winnerIndex = state.players.findIndex(p => p.id === winner?.playerId);
                 if (winnerIndex !== -1) {
@@ -674,15 +592,24 @@ const gameSlice = createSlice({
                         cardsPlayed: [],
                         suit: undefined,
                     });
+                } else if (winner) {
+                    //Check if Game is over. Game is over if player who took trump has at least 2 tricks and all other players in round have at least 1 tricks
+                    const playerWhoTookTrump = state.players.find(player => player.hasTakenTrump);
+                    const isGameOver = (playerWhoTookTrump?.tricks ?? 0) >= 2 && playersInRound.every(player => player.tricks >= 1);
+                    if (isGameOver) {
+                        state.rounds[state.currentRound].roundState = 'GameOver';
+                    } else {
+                        state.rounds[state.currentRound].roundState = 'RoundOver';
+                    }
                 } else {
-                    //Set game state roundSettled
-                    state.rounds[state.currentRound].roundState = 'RoundOver';
+                    console.warn('Round over but no winner found');
                 }
             }
         },
         endRound(state) {
             const currentRound = state.rounds[state.currentRound];
-            if (currentRound.turns.length > 3 && currentRound.roundState === 'RoundOver') {
+            const isGameOver = currentRound.roundState === 'GameOver';
+            if (currentRound.roundState === 'RoundOver' || isGameOver) {
                 //End round
                 let newRoundPot = 0;
                 //Calculate points and add to winner
@@ -699,8 +626,8 @@ const gameSlice = createSlice({
                 });
 
                 const newRound: Round = {
-                    roundNumber: currentRound.roundNumber + 1,
-                    roundPot: newRoundPot,
+                    roundNumber: isGameOver ? 0 : currentRound.roundNumber + 1,
+                    roundPot: isGameOver ? 0: newRoundPot,
                     //dealer is next id in players array after current dealer:
                     dealer: state.players[(state.players.findIndex(p => p.isDealer) + 1) % state.players.length].id ,
                     playersInRound: state.rounds[state.currentRound].playersInRound,
@@ -729,20 +656,13 @@ const gameSlice = createSlice({
                     player.hasRefusedTrump = false;
                     player.isIn = false;
                 });
+                if (isGameOver) {
+                    state.rounds = [];
+                }
                 //Add new round to rounds
                 state.rounds.push(newRound);
-                state.currentRound++;
-                currentRound.roundState = 'RoundOver';
-
+                state.currentRound = isGameOver ? 0 : state.currentRound + 1;
                 const newCurrentRound = state.rounds[state.currentRound];
-                /* I dont think we can push a turn here it is done after exchangeCards
-                newCurrentRound.turns.push({
-                    nextPlayer: state.players[newCurrentRound.dealer!].id, // Add '!' to assert that 'dealer' is not undefined
-                    winner: undefined,
-                    cardsPlayed: [],
-                    suit: undefined,
-                });
-                */
                 state.deck = shuffleDeck(createDeck());
                 newCurrentRound.initialized = true;
             }
@@ -816,8 +736,10 @@ export const isPlayersTurn = (state: { game: Game }, playerId: number) => {
     return currentTurn.nextPlayer === playerId;
 }
 export const isCardPlayable = (state: { game: Game }, cardId: number) => {
-    const currentRound = state.game.rounds[state.game.currentRound];
+    console.log('isCardPlayable');
+    console.log('cardId', cardId);
 
+    const currentRound = state.game.rounds[state.game.currentRound];
     //Current turn might be empty if not all players have exchanged cards
     const currentTurn = currentRound.turns.at(-1);
     if (!currentTurn) {
@@ -826,6 +748,20 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
     }
     const nextPlayer = state.game.players.find(player => player.id === currentTurn?.nextPlayer);
     const card = state.game.deck.find(card => card.id === cardId);
+    console.log('CARD', card);
+    if (!card) {
+        console.warn('Card not found');
+        return false;
+    }
+
+    //Find card in next players hand
+    const cardInHand = nextPlayer?.hand.find(c => c === cardId);
+    if (cardInHand === undefined) {
+        console.warn('Card not in players hand');
+        console.log('next player id', nextPlayer?.id, 'card id', cardId);
+        return false;
+    }
+
     if (card?.isPlayed) {
         console.warn('Card is already played');
         return false;
@@ -843,7 +779,7 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
         }
         const suitLed = currentTurn.suit;
 
-        const cardOfSuitLed = nextPlayer.hand.some(cardinHandId => {
+        const hasCardOfSuitLed = nextPlayer.hand.some(cardinHandId => {
             const card = state.game.deck.find(card => card.id === cardinHandId);
             if (card && card.suit === suitLed && !card.isPlayed) {
                 return true;
@@ -851,35 +787,53 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
             return false;
         })
 
-        if (cardOfSuitLed && card?.suit !== suitLed) {
-            console.warn('Card is not of suit led');
+        if (hasCardOfSuitLed && card?.suit !== suitLed) {
+            console.log('Player had card of suit led, but this card is not of suit led, so it can not be played');
             return false;
         }
-        if (cardOfSuitLed && card?.suit === suitLed) {
+        if (hasCardOfSuitLed && card?.suit === suitLed) {
+            console.log('Player had card of suit led, and this card is of suit led, so it can be played');
             return true;
         }
-        if (!cardOfSuitLed) {
+        if (!hasCardOfSuitLed) {
+            console.log('Player did not have card of suit led, so any card can be played');
             return true;
         }
     }
+    //console log the players hand
+    console.log('Player hand', nextPlayer?.hand, cardId);
     console.warn('Card is not in players hand');
     return false;
 }
 export const selectPlayerWhoShouldExchangeCards = (state: { game: Game }) => {
+    //A player can only exchange cards if roundstate is 4Cards and all players have either folded or isIn
+    if (state.game.rounds[state.game.currentRound].roundState !== '4Cards') {
+        console.warn('Roundstate is not 4Cards. Cant exchange cards');
+        return;
+    }
+
+    if (!state.game.players.every(player => player.hasFolded || player.isIn)) {
+        console.warn('Not all players have folded or isIn. Cant exchange cards');
+        return;
+    }
+
     //the first player to exchange cards is the player who took the trump
     const playerTookTrump = state.game.players.find(player => player.hasTakenTrump) as Player | undefined;
 
     if (playerTookTrump && !playerTookTrump.hasExchangedCards) {
+        console.warn('Player who took trump has not exchanged cards');
         return playerTookTrump;
     }
 
     //if no player has taken trump, return undefined
     if (!playerTookTrump) {
+        console.warn('No player has taken trump');
         return;
     }
 
     const numberOfPlayers = state.game.numberOfPlayers;
     for (let i = 0; i < numberOfPlayers; i++) {
+        console.log('i', i);
         const index = (playerTookTrump.id + i) % numberOfPlayers;
         const player = state.game.players.find(player => player.id === index);
         if (player?.hasExchangedCards === false && player.hand.length === 4 && !player.hasFolded && player.isIn) {

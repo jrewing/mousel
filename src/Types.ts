@@ -11,7 +11,6 @@ export type Game= {
     discardedCards: Card[]
     currentTurn: Player | undefined
     currentRound: number
-    isGameOver: boolean
     rounds: Round[]
     initialized: boolean
 }

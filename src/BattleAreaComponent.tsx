@@ -20,7 +20,6 @@ const dispatch = useDispatch();
 
     const newRoundHandler = () => {
         console.log('New round')
-        //dispatch(newRound())
         dispatch(endRound())
     }
 
@@ -36,9 +35,8 @@ const dispatch = useDispatch();
                     <h3>Trump Suit {trumpSuit?.suit}</h3>
                     <div>Round pot {round?.roundPot}</div>
                     <div>Round state {round?.roundState}</div>
-                    <div>Number of players {game.numberOfPlayers}</div>
                     <div>Lead suit: {round?.turns.at(-1)?.suit} </div>
-                    <div><button disabled={!(currentRound?.roundState === 'RoundOver')} onClick={() => newRoundHandler()}>New Round</button></div>
+                    <div><button disabled={!(currentRound?.roundState === 'RoundOver' || currentRound?.roundState === 'GameOver')} onClick={() => newRoundHandler()}>New Round</button></div>
                     </>
 
             </div>

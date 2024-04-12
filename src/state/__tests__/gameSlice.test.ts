@@ -724,4 +724,111 @@ async function setupAndDealCards() {
         const newRoundRound2 = state.rounds[state.currentRound];
         expect(newRoundRound2.roundState).toEqual('Initial');
     })
+    it.only('should go through 4 turns, 1 player folds and end the round dividing the pot to the players, then continuing and play more rounds', async() => {
+        let state = await dispatchAndGetState(initializeGame(numberOfPlayers));
+
+        const roundsToPlay = 121; // Number of rounds to test
+        for (let round = 0; round < roundsToPlay; round++) {
+            console.log(`Round ${round + 1}`);
+            state = await setupAndDealCards();
+            const whoCanTakeTrump = selectPlayerWhoCanTakeTrump(store.getState()) as Player;
+            expect(whoCanTakeTrump).toBeDefined();
+            expect(whoCanTakeTrump.id).toEqual(state.players[2].id);
+            state = await dispatchAndGetState(takeTrump(whoCanTakeTrump.id));
+
+            for (let i = 0; i < state.players.length; i++) {
+                const playerWhoCanFoldOrStay = selectPlayerWhoCanFoldOrStay(store.getState());
+                if (playerWhoCanFoldOrStay) {
+                    const action = i % 2 === 0 ? playerIsIn(playerWhoCanFoldOrStay.id) : playerFolds(playerWhoCanFoldOrStay.id);
+                    state = await dispatchAndGetState(action);
+                }
+            }
+            const currentRound = state.currentRound;
+            expect(state.rounds[currentRound].roundState).toEqual('4Cards');
+            for (const player of state.players) {
+                console.log(state.rounds.at(-1)?.roundState); // Add null check before accessing roundState
+                const playerWhoCanExchange = selectPlayerWhoShouldExchangeCards(store.getState());
+                if (playerWhoCanExchange) {
+                    state = await dispatchAndGetState(exchangeCards(playerWhoCanExchange as Player));
+                }
+            }
+            expect(state.rounds[currentRound].roundState).toEqual('Showdown');
+            // Expect all players to have exchanged cards
+            for (const player of state.players.filter(p => p.isIn)) {
+                expect(player.hasExchangedCards).toBe(true);
+            }
+
+            expect(state.rounds[currentRound].roundPot).toBeGreaterThan(0);
+
+            // Play 4 turns
+            for (let i = 0; i < 4; i++) {
+                state = store.getState().game;
+                const currentTurn = selectCurrentTurn(store.getState());
+                expect(currentTurn).toBeDefined();
+                expect(state.rounds[currentRound].turns.length).toBe(i + 1);
+
+                const startingPlayerId = currentTurn?.nextPlayer;
+                expect(startingPlayerId).toBeDefined();
+                const startingPlayer = state.players.find(player => player.id === startingPlayerId);
+
+                expect(startingPlayer?.hasFolded).toBeFalsy();
+
+                // Ensure players in the round are determined before finding the starting index
+                const playersInRound = state.players.filter(p => p.isIn && !p.hasFolded);
+
+                // Find the index of the starting player in the filtered list of active players
+                const startIndex = playersInRound.findIndex(player => player.id === startingPlayer?.id);
+
+                // Assuming startIndex is correctly pointing to the starting player in playersInRound
+                const orderedPlayers = [
+                    ...playersInRound.slice(startIndex),
+                    ...playersInRound.slice(0, startIndex)
+                ];
+                expect(orderedPlayers[0].id).toBe(startingPlayerId);
+                expect(orderedPlayers[0].id).toBe(state.rounds.at(-1)?.turns.at(-1)?.nextPlayer)
+
+                // Log the order of players to confirm correct order
+                console.log(`Order of players: ${orderedPlayers.map(p => p.id).join(', ')}`);
+
+
+                for (const player of orderedPlayers) {
+                    console.log(`Player ${player.id} playing`);
+                    console.log(`Player ${player.isIn} hand: ${player.hand}`);
+                    let aCardPlayable = false;
+                    // Log the nextPlayer and the order of players
+                    const currentTurn = selectCurrentTurn(store.getState());
+                    console.log(`Next player in isCardPlayable: ${currentTurn?.nextPlayer}`, startingPlayerId);
+                    console.log(`Order of players: ${orderedPlayers.map(p => p.id).join(', ')}`);
+
+                    for (const cardId of player.hand) {
+                        aCardPlayable = isCardPlayable(store.getState(), cardId);
+                        if (aCardPlayable) {
+                            state = await dispatchAndGetState(playCard({ playerId: player.id, cardId: cardId }));
+                            break;
+                        }
+                    }
+                    expect(aCardPlayable).toBe(true);
+                }
+
+                expect(state.rounds[currentRound].turns[i].cardsPlayed.length).toEqual(orderedPlayers.length);
+                expect(state.rounds[currentRound].turns[i].winner).toBeDefined();
+            }
+
+            expect(state.rounds[currentRound].turns.length).toEqual(4);
+            expect(state.rounds[currentRound].roundState === 'RoundOver' || state.rounds[currentRound].roundState === 'GameOver').toBeTruthy();
+
+            if (state.rounds[currentRound].roundState === 'GameOver') {
+                state = await dispatchAndGetState(endRound());
+                expect(state.rounds.length).toEqual(1);
+                return;
+            } else if (state.rounds[currentRound].roundState === 'RoundOver') {
+                state = await dispatchAndGetState(endRound());
+                expect(state.rounds.length).toEqual(currentRound + 2);
+            }
+        }
+
+        // Validate the start of the new round
+        const newRound = state.rounds[state.currentRound];
+        expect(newRound.roundState).toEqual('Initial');
+    }, 1000000);
 })
