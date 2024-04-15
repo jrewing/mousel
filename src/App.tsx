@@ -35,12 +35,6 @@ function AppContent() {
             {gameIsInitialized &&
                 <GameComponent />}
         </div>
-        <div>
-                {/* All game data for debugging */}
-                <pre>
-                    {JSON.stringify(game, null, 2)}
-                </pre>
-            </div>
             </>
     );
 }

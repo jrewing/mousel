@@ -116,7 +116,7 @@ async function setupAndDealCards() {
         state = await setSmallBlinds();
         state = await dispatchAndGetState(dealCards());
                 expect(state.deck.filter(c => !c.isDealt).length).toEqual(30);
-        state = await dispatchAndGetState(setTrumpSuit());
+        state = await dispatchAndGetState(setTrumpSuit({hidden: false}));
         state = await dispatchAndGetState(dealCards());
 
         expect(state.deck.filter(c => !c.isDealt && !c.isDiscarded).length).toEqual(20);
@@ -537,7 +537,7 @@ async function setupAndDealCards() {
             state = await dispatchAndGetState(setTrumpSuit({hidden: false}));
             const dealer = state.players.find(player => player.isDealer);
             expect(dealer).toBeDefined();
-            state = await dispatchAndGetState(takeTrumpEarly({ player: dealer as Player }));
+            state = await dispatchAndGetState(takeTrumpEarly(dealer?.id ?? -1));
             state = await dispatchAndGetState(dealCards());
             const dealerAfter = state.players.find(player => player.isDealer);
             expect(dealerAfter?.hand.length).toEqual(5);

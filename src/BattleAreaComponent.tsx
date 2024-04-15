@@ -12,7 +12,6 @@ const dispatch = useDispatch();
     const currentRound = useSelector(selectRound)
     const turnNumber = useSelector(selectCurrentTurnNumber)
     const trumpSuit = useSelector(selectTrumpSuit);
-    const round = useSelector(selectRound);
     const game = useSelector(selectGame);
     const players = game.players;
     const winner = players.find(player => player.id === currentTurn?.winner)
@@ -23,7 +22,16 @@ const dispatch = useDispatch();
         dispatch(endRound())
     }
 
+
+    const allPlayersAreReady = players.every(player => player.hasFolded || player.isIn)
+
     const currentWinnerCard = trumpSuit && currentTurn && currentTurn.cardsPlayed.length > 0 ? calculateWinner(trumpSuit?.suit, currentTurn, deck) : undefined
+
+    const newRoundButtonStyle = (currentRound?.roundState === 'RoundOver' || currentRound?.roundState === 'GameOver') ? {
+        backgroundColor: 'green'
+    } : {
+        backgroundColor: 'grey'
+    }
 
     return (
         <div id="battleArea">
@@ -32,11 +40,15 @@ const dispatch = useDispatch();
                     <h3>Round number {currentRound?.roundNumber}</h3>
                     <h3>Winner: {winner?.name}</h3>
                     <h4>Turn number: {turnNumber}</h4>
-                    <h3>Trump Suit {trumpSuit?.suit}</h3>
-                    <div>Round pot {round?.roundPot}</div>
-                    <div>Round state {round?.roundState}</div>
-                    <div>Lead suit: {round?.turns.at(-1)?.suit} </div>
-                    <div><button disabled={!(currentRound?.roundState === 'RoundOver' || currentRound?.roundState === 'GameOver')} onClick={() => newRoundHandler()}>New Round</button></div>
+                    <h3>Trump Suit {currentRound?.hiddenTrumpSuit && !allPlayersAreReady ? 'FORDEKT' : trumpSuit?.suit}</h3>
+                    <div>Round pot {currentRound?.roundPot}</div>
+                    <div>Round state {currentRound?.roundState}</div>
+                    <div>Lead suit: {currentRound?.turns.at(-1)?.suit} </div>
+                    <div>
+                        <button style={newRoundButtonStyle} disabled={!(currentRound?.roundState === 'RoundOver' || currentRound?.roundState === 'GameOver')} onClick={() => newRoundHandler()}>
+                            New Round
+                        </button>
+                    </div>
                     </>
 
             </div>

@@ -46,13 +46,12 @@ const CardComponent: React.FC<CardComponentProps> = (
         return !pCard?.isDiscarded
     }).length > 4 && player.hasExchangedCards
 
-    const toString = () => {
-        return `${card.name} of ${card.suit}`;
-    }
+   const playAbleStyle = isPlayable ? {backgroundColor: 'green'} : {backgroundColor: 'grey'}
+
 
     return (
     <div>
-        <button onClick={isPlayable && playersTurn && !card.isPlayed ? () => playCardHandler() : undefined} style={{ color: card.color, border: card.isSelected ? 'inset' : 'outset' }}>
+        <button onClick={!card.isPlayed ? () => playCardHandler() : undefined} style={playAbleStyle}>
             {card.name} {card.suitSymbol}
         </button>
         {!isTrumpForSale && selectable && <input onChange={() => toggleSelected()} checked={card.isSelected} type="checkbox" />}

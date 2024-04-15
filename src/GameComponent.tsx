@@ -15,15 +15,6 @@ const GameComponent: React.FC<GameComponentProps> = () => {
     const round = useSelector(selectRound);
     const game = useSelector(selectGame);
 
-
-
-
-    const setTrumpSuitHandler = () => {
-        dispatch(setTrumpSuit())
-    }
-
-
-
     return (
         <div>
             <div className="game-container">

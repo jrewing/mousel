@@ -106,7 +106,7 @@ export function compareCardValues(card1: Card, card2: Card) {
 
 export function calculateWinner(trumpSuit: Suit, currentTurn: Turn, deck: Card[]){
     // Check if currentTurn.cardsPlayed is defined
-    if (!currentTurn.cardsPlayed) {
+    if (currentTurn.cardsPlayed === undefined) {
         console.error('currentTurn.cardsPlayed is undefined');
         return;
     }
@@ -198,7 +198,7 @@ const gameSlice = createSlice({
         dealCards(state) {
             //if roundState is Initial or 0Cards, but all players except dealer have not set small blind. Issue warning and return
             if (state.currentRound === 0 && (state.rounds[state.currentRound].roundState === 'Initial' || state.rounds[state.currentRound].roundState === '0Cards')) {
-                if (!state.players.filter(player => !player.isDealer).every(player => player.isSmallBlind)) {
+                if (state.players.filter(player => !player.isDealer).every(player => player.isSmallBlind) === false) {
                     console.warn('DealCards: All players have not set small blind. Can´t deal cards');
                     return;
                 }
@@ -226,7 +226,7 @@ const gameSlice = createSlice({
                state.rounds[state.currentRound].roundState = '4Cards';
            }
         },
-        setTrumpSuit(state, action: PayloadAction<{ hidden?: boolean } | undefined>) {
+        setTrumpSuit(state, action: PayloadAction<{ hidden: boolean } >) {
             //If roundState is 2Cards, set trump suit to the first card in the deck else issue warning and return
             if (state.rounds[state.currentRound].roundState !== '2Cards') {
                 console.warn('SetTrumpSuit: Can not set trump suit if roundState is not 2Cards');
@@ -242,7 +242,7 @@ const gameSlice = createSlice({
             state.deck[firstFreshCardIndex].isTrump = true;
             state.deck[firstFreshCardIndex].isFresh = false;
             // If hidden is not provided in the payload, default to false
-            state.rounds[state.currentRound].hiddenTrumpSuit = action.payload?.hidden !== undefined ? action.payload.hidden : false;
+            state.rounds[state.currentRound].hiddenTrumpSuit = action.payload?.hidden;
         },
         toggleSelectCard(state, action: PayloadAction<number>) {
             //Can only select card if roundState is 4Cards and player has not changed cards or folded
@@ -302,6 +302,8 @@ const gameSlice = createSlice({
             //If all players who is in and not folded have exchanged cards, set roundState to Showdown
             if (state.players.filter(p=>p.isIn && !p.hasFolded).every(player => player.hasExchangedCards) && playerTookTrump !== undefined) {
                 state.rounds[state.currentRound].roundState = 'Showdown';
+                //Set hidde trump suit to false
+                state.rounds[state.currentRound].hiddenTrumpSuit = false;
                 //Reload the player who took trump because it seems playerTookTrump is outdated
                 const playerTookTrump = state.players.find(player => player.hasTakenTrump);
                 const turn = {
@@ -328,14 +330,18 @@ const gameSlice = createSlice({
 
             state.rounds[state.currentRound].roundPot += amount;
         },
-        takeTrumpEarly(state, action: PayloadAction<{player: Player}>) {
+        takeTrumpEarly(state, action: PayloadAction<number>) {
+            const player = state.players.find(player => player.id === action.payload);
+            if (player === undefined) {
+                console.warn('Player not found');
+                return;
+            }
             //Can only take trump early if roundstate is 2Cards and player has not taken trump early and player has not folded and player is dealer
             if (state.rounds[state.currentRound].roundState !== '2Cards') {
                 console.warn('Roundstate is not 2Cards. Cant take trump early');
                 return;
             }
 
-            const player = action.payload.player;
             if (player.hasTakenTrumpEarly) {
                 console.warn('Player has already taken trump early');
                 return;
@@ -354,7 +360,7 @@ const gameSlice = createSlice({
             state.rounds[state.currentRound].trumpForSale = false;
             state.rounds[state.currentRound].dealerTookTrump = true;
             state.players = state.players.map(player => {
-                if (player.id === action.payload.player.id && state.rounds[state.currentRound].trumpSuit !== undefined) {
+                if (player.id === action.payload && state.rounds[state.currentRound].trumpSuit !== undefined) {
                     //add trump card to player hand
                     const trumpCard = state.rounds[state.currentRound].trumpSuit;
                     if (trumpCard) {
@@ -480,7 +486,12 @@ const gameSlice = createSlice({
             const card = state.deck.find(card => card.id === action.payload);
             const player = state.players.find(player => player.hand.find(c => c === card?.id));
 
-            if (!player) {
+            if (card === undefined) {
+                console.warn('Card not found');
+                return;
+            }
+
+            if (player === undefined) {
                 console.warn('Player not found');
                 return;
             }
@@ -498,10 +509,9 @@ const gameSlice = createSlice({
                 return;
             }
 
-            if (player && card) {
-                player.hand = player.hand.filter(c => c !== card.id);
-                card.isDiscarded = true;
-            }
+            player.hand = player.hand.filter(c => c !== card.id);
+            card.isDiscarded = true;
+
         },
         playCard(state, action: PayloadAction<{ cardId: number, playerId: number }>) {
             const card = state.deck.find(card => card.id === action.payload.cardId);
@@ -527,6 +537,12 @@ const gameSlice = createSlice({
 
             const currentRound = state.rounds[state.currentRound];
             const currentTurn = currentRound.turns.at(-1);
+
+            if (!currentTurn){
+                //I think this is an error state
+                console.warn('no current turn');
+                return;
+            }
 
             //Trump suit must have been set and a player must have taken trump before cards can be played
             if (currentRound.trumpSuit === undefined) {
@@ -566,10 +582,8 @@ const gameSlice = createSlice({
                 currentTurn.cardsPlayed.push({ cardId: card.id, playerId: player.id });
                 //Set next player. Next player is the player after the current player in the playersInRound array which has not folded
                 currentTurn.nextPlayer = playersInRound[(playerIndex + 1) % playersInRound.length].id;
-            } else if (!currentTurn){
-                //I think this is an error state
-                console.warn('no current turn');
             }
+
             //if all players who are in and not folded have played a card, end turn
             if (currentTurn && currentTurn.cardsPlayed && currentTurn?.cardsPlayed?.length >= playersInRound.length) {
                 const winner = calculateWinner(currentRound.trumpSuit.suit, currentTurn, state.deck);
@@ -736,9 +750,6 @@ export const isPlayersTurn = (state: { game: Game }, playerId: number) => {
     return currentTurn.nextPlayer === playerId;
 }
 export const isCardPlayable = (state: { game: Game }, cardId: number) => {
-    console.log('isCardPlayable');
-    console.log('cardId', cardId);
-
     const currentRound = state.game.rounds[state.game.currentRound];
     //Current turn might be empty if not all players have exchanged cards
     const currentTurn = currentRound.turns.at(-1);
@@ -748,7 +759,7 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
     }
     const nextPlayer = state.game.players.find(player => player.id === currentTurn?.nextPlayer);
     const card = state.game.deck.find(card => card.id === cardId);
-    console.log('CARD', card);
+
     if (!card) {
         console.warn('Card not found');
         return false;
@@ -757,18 +768,14 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
     //Find card in next players hand
     const cardInHand = nextPlayer?.hand.find(c => c === cardId);
     if (cardInHand === undefined) {
-        console.warn('Card not in players hand');
-        console.log('next player id', nextPlayer?.id, 'card id', cardId);
         return false;
     }
 
     if (card?.isPlayed) {
-        console.warn('Card is already played');
         return false;
     }
 
     if(nextPlayer?.hasFolded) {
-        console.warn('Player has folded');
         return false;
     }
 
@@ -788,15 +795,12 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
         })
 
         if (hasCardOfSuitLed && card?.suit !== suitLed) {
-            console.log('Player had card of suit led, but this card is not of suit led, so it can not be played');
             return false;
         }
         if (hasCardOfSuitLed && card?.suit === suitLed) {
-            console.log('Player had card of suit led, and this card is of suit led, so it can be played');
             return true;
         }
-        if (!hasCardOfSuitLed) {
-            console.log('Player did not have card of suit led, so any card can be played');
+        if (hasCardOfSuitLed === false) {
             return true;
         }
     }
@@ -826,7 +830,7 @@ export const selectPlayerWhoShouldExchangeCards = (state: { game: Game }) => {
     }
 
     //if no player has taken trump, return undefined
-    if (!playerTookTrump) {
+    if (playerTookTrump === undefined) {
         console.warn('No player has taken trump');
         return;
     }
