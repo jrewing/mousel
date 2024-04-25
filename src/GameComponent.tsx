@@ -1,34 +1,48 @@
-import React from 'react';
-import PlayerComponent  from './PlayerComponent';
-import { selectDealer, selectGame, selectPlayers, selectRound, selectTrumpSuit, setTrumpSuit } from './state/gameSlice'
-import { useSelector, useDispatch } from "react-redux"
-import { dealCards } from './state/gameSlice'
-import BattleAreaComponent from './BattleAreaComponent';
+import React, { useState } from "react";
+import PlayerComponent from "./PlayerComponent";
+import { selectGame } from "./state/gameSlice";
+import { useSelector, useDispatch } from "react-redux";
+import BattleAreaComponent from "./BattleAreaComponent";
+import { PlayedCard } from "./Types";
 
-interface GameComponentProps {
-
-}
+interface GameComponentProps {}
 
 const GameComponent: React.FC<GameComponentProps> = () => {
-    const dispatch = useDispatch();
-    const trumpSuit = useSelector(selectTrumpSuit);
-    const round = useSelector(selectRound);
-    const game = useSelector(selectGame);
+  const game = useSelector(selectGame);
+  const [playedCard, setPlayedCard] = useState<PlayedCard | undefined>();
 
-    return (
-        <div>
-            <div className="game-container">
-                <div className="player-container">
-                    {game.players.map((player, index) => (
-                        <div key={`player-${player.id}`} className={`player player-${index}`}>
-                            <PlayerComponent playerId={player.id}/>
-                        </div>
-                    ))}
-                </div>
-                <BattleAreaComponent />
+  //Parameter is a ref from useRef
+  function cardPlayedHandler(playedCard: PlayedCard | undefined) {
+    if (playedCard !== undefined) {
+      setPlayedCard(playedCard);
+    } else {
+      setPlayedCard(undefined);
+    }
+  }
+
+  return (
+    <div>
+      <div className="game-container">
+        <div className="player-container">
+          {game.players.map((player, index) => (
+            <div
+              key={`player-${player.id}`}
+              className={`player player-${index}`}
+            >
+              <PlayerComponent
+                onCardPlayed={cardPlayedHandler}
+                playerId={player.id}
+              />
             </div>
+          ))}
         </div>
-    );
+        <BattleAreaComponent
+          playedCard={playedCard}
+          cardPlayedHandler={cardPlayedHandler}
+        />
+      </div>
+    </div>
+  );
 };
 
 export default GameComponent;
