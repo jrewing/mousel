@@ -9,6 +9,7 @@ import {
   selectDeck,
   isCardSelectable,
   selectTrumpForSale,
+  selectTrumpSuit,
 } from "./state/gameSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "./state/store";
@@ -36,9 +37,8 @@ const CardComponent: React.FC<CardComponentProps> = ({
     isCardSelectable(state, card.id),
   );
 
-  const playersTurn = useSelector((state: RootState) =>
-    isPlayersTurn(state, player.id),
-  );
+  const trumpSuit = useSelector(selectTrumpSuit);
+
   const isPlayable = useSelector((state: RootState) =>
     isCardPlayable(state, card.id),
   );
@@ -77,15 +77,25 @@ const CardComponent: React.FC<CardComponentProps> = ({
     <VStack p={1}>
       <Button
         ref={cardRef}
-        id="card-inhand-${card.id}"
+        id={`card-inhand-${card.id}`}
         p={1}
         height={6}
         onClick={!card.isPlayed ? () => playCardHandler() : undefined}
         _disabled={{ opacity: 0.5 }}
         isDisabled={!isPlayable}
         color={card.color === "Red" ? "red" : "black"}
+        backgroundColor={"white"}
+        borderColor={card.suit === trumpSuit?.suit ? "yellow.300" : "black"}
+        borderWidth={2}
+        fontFamily={"Noticia Text"}
+        fontSize={16}
+        fontWeight={400}
+        fontStyle={"italic"}
       >
-        {card.name.charAt(0)} {card.suitSymbol}
+        {["Ace", "King", "Queen", "Jack"].includes(card.name)
+          ? card.name.charAt(0)
+          : card.name}{" "}
+        {card.suitSymbol}
       </Button>
       {!isTrumpForSale && selectable && (
         <input

@@ -8,6 +8,7 @@ import {
   Value,
   Round,
   Turn,
+  GameState,
 } from "../Types";
 
 // Step 1: Define the initial state
@@ -20,6 +21,7 @@ const initialState: Game = {
   numberOfPlayers: 0,
   rounds: [],
   initialized: false,
+  autoSetup: false,
   canFlipTrump: false,
 };
 
@@ -189,6 +191,9 @@ const gameSlice = createSlice({
       state.rounds = [initialRoundState];
       state.initialized = true;
     },
+    setAutoSetup(state, action: PayloadAction<boolean>) {
+      state.autoSetup = action.payload;
+    },
     setGameCanFlipTrump(state, action: PayloadAction<boolean>) {
       state.canFlipTrump = action.payload;
     },
@@ -211,6 +216,7 @@ const gameSlice = createSlice({
           isDeclarer: false,
         };
       });
+      state.currentTurn = undefined;
       state.rounds.push(newRoundState);
       state.deck = shuffleDeck(createDeck());
     },
@@ -223,9 +229,12 @@ const gameSlice = createSlice({
       const player = state.players.find(
         (player) => player.id === action.payload,
       );
+
       if (player) {
         player.isDealer = true;
         state.rounds[state.currentRound].dealer = action.payload;
+      } else {
+        console.warn("Player not found. Cant set dealer");
       }
     },
     dealCards(state) {
@@ -404,14 +413,14 @@ const gameSlice = createSlice({
 
       // Replace the player with a new object, with the updated bank
       if (playerIndex !== -1) {
-        //TODO: Check if player has enough money to add wager and rethink isSmallBlind? And add automatic wager after round ends
+        //TODO: Check if player has enough money to add wager and rethink isSmallBlind?
         state.players[playerIndex] = {
           ...player,
           bank: player.bank - amount,
           isSmallBlind: true,
         };
       }
-
+      console.log("addWager", player, amount);
       state.rounds[state.currentRound].roundPot += amount;
     },
     takeTrumpEarly(state, action: PayloadAction<number>) {
@@ -849,12 +858,7 @@ const gameSlice = createSlice({
         //there are only 4 turns in a round
         if (currentRound.turns.length < 4 && winner) {
           //After winner is found, start new turn
-          currentRound.turns.push({
-            nextPlayer: winner.playerId,
-            winner: undefined,
-            cardsPlayed: [],
-            suit: undefined,
-          });
+          state.rounds[state.currentRound].roundState = "TurnOver";
         } else if (winner) {
           //Check if Game is over. Game is over if player who took trump has at least 2 tricks and all other players in round have at least 1 tricks
           const playerWhoTookTrump = state.players.find(
@@ -872,6 +876,25 @@ const gameSlice = createSlice({
           console.warn("Round over but no winner found");
         }
       }
+    },
+    newTurn(state) {
+      if (state.rounds[state.currentRound].roundState !== "TurnOver") {
+        return;
+      }
+
+      const currentRound = state.rounds[state.currentRound];
+
+      const currentTurn = currentRound.turns.at(-1);
+      if (currentTurn?.winner === undefined) {
+        return;
+      }
+      currentRound.turns.push({
+        nextPlayer: currentTurn?.winner,
+        winner: undefined,
+        cardsPlayed: [],
+        suit: undefined,
+      });
+      currentRound.roundState = "Showdown";
     },
     endRound(state) {
       const currentRound = state.rounds[state.currentRound];
@@ -959,9 +982,11 @@ export const {
   setDealer,
   setTrumpSuit,
   initializeGame,
+  setAutoSetup,
   dealCards,
   toggleSelectCard,
   newRound,
+  newTurn,
   exchangeCards,
   addWager,
   playCard,
@@ -1008,10 +1033,15 @@ export const isCardSelectable = (state: { game: Game }, cardId: number) => {
 };
 export const gameInitialized = (state: { game: Game }) =>
   state.game.initialized;
+export const isAutoSetup = (state: { game: Game }) => state.game.autoSetup;
 export const roundInitialized = (state: { game: Game }) =>
   state.game.rounds[state.game.currentRound].initialized;
-export const selectTrumpSuit = (state: { game: Game }) =>
-  state.game.rounds[state.game.currentRound].trumpSuit;
+export const selectTrumpSuit = (state: { game: Game }) => {
+  if (state.game.rounds.length > 0 && state.game.currentRound >= 0) {
+    return state.game.rounds[state.game.currentRound]?.trumpSuit;
+  }
+  return undefined;
+};
 export const selectTrumpSuitHidden = (state: { game: Game }) =>
   state.game.rounds[state.game.currentRound].hiddenTrumpSuit;
 export const selectRound = (state: { game: Game }) => state.game.rounds.at(-1);
@@ -1038,6 +1068,10 @@ export const isPlayersTurn = (state: { game: Game }, playerId: number) => {
   if (!currentTurn) {
     return false;
   }
+  if (currentRound.roundState !== "Showdown") {
+    //console.warn("Roundstate is not Showdown. Cant play card");
+    return false;
+  }
   return currentTurn.nextPlayer === playerId;
 };
 export const isCardPlayable = (state: { game: Game }, cardId: number) => {
@@ -1046,6 +1080,11 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
   const currentTurn = currentRound.turns.at(-1);
   if (!currentTurn) {
     //console.warn("No current turn");
+    return false;
+  }
+  //If round state is not Showdown, cant play card
+  if (currentRound.roundState !== "Showdown") {
+    //console.warn("Roundstate is not Showdown. Cant play card");
     return false;
   }
   const nextPlayer = state.game.players.find(
@@ -1103,6 +1142,11 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
   return false;
 };
 export const selectPlayerWhoShouldExchangeCards = (state: { game: Game }) => {
+  //if game rounds length is 0, return undefined
+  if (state.game.rounds.length === 0) {
+    return;
+  }
+
   //A player can only exchange cards if roundstate is 4Cards and all players have either folded or isIn
   if (state.game.rounds[state.game.currentRound].roundState !== "4Cards") {
     //console.warn("Roundstate is not 4Cards. Cant exchange cards");

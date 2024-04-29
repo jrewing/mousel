@@ -164,7 +164,39 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
     isPlayersTurn(state, playerId),
   );
 
-  const border = playersTurn ? "3px solid green" : "3px solid black";
+  function sortHand(hand: number[] | undefined) {
+    if (!hand) {
+      return [];
+    }
+    //Sort a copy
+    const handCopy = [...hand];
+    const orderedHand = handCopy.sort((a, b) => {
+      const cardA = deck.find((c) => c.id === a);
+      const cardB = deck.find((c) => c.id === b);
+      if (cardA === undefined || cardB === undefined) {
+        return 0;
+      }
+      if (cardA?.suit === cardB?.suit) {
+        return cardA.value - cardB.value;
+      }
+      if (cardA?.suit === trumpSuit?.suit) {
+        return -1;
+      }
+      if (cardB?.suit === trumpSuit?.suit) {
+        return 1;
+      }
+      if (cardA?.suit === "Hearts" || cardA?.suit === "Diamonds") {
+        return -1;
+      }
+      if (cardB?.suit === "Hearts" || cardB?.suit === "Diamonds") {
+        return 1;
+      }
+      return 0;
+    });
+    return orderedHand;
+  }
+  //Sort the hand by suit and value. Trump suit is always first. Alternate red and black suits.
+  const orderedHand = sortHand(player?.hand);
 
   return (
     <Card
@@ -236,7 +268,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
             )}
           </HStack>
           <HStack spacing={1}>
-            {player?.hand.map((cardId, index: number) => {
+            {orderedHand.map((cardId, index: number) => {
               const card = deck.find((c) => c.id === cardId);
               return (
                 card &&
@@ -246,7 +278,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     onCardPlayed={onCardPlayed}
                     key={index}
                     card={card}
-                    player={player}
+                    player={player!}
                   />
                 )
               );

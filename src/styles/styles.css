@@ -7,6 +7,17 @@
   --small-square-end: calc(100% - var(--small-square-start));
 }
 
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.app-header {
+  font-family: "Noticia Text", serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
 .game-container {
   display: flex;
   position: relative;
@@ -75,6 +86,11 @@
 }
 
 .winning-card {
+  border: 3px solid rgb(246, 246, 3);
+  animation: pulse 1.5s infinite;
+}
+
+.suit-led-card {
   border: 3px solid rgb(118, 200, 55);
   animation: pulse 1.5s infinite;
 }

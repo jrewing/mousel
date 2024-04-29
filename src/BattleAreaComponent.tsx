@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { motion, Reorder } from "framer-motion";
+import { color, motion, Reorder } from "framer-motion";
 import {
   calculateWinner,
   endRound,
+  newTurn,
   selectCurrentTurn,
   selectCurrentTurnNumber,
   selectGame,
@@ -10,18 +11,18 @@ import {
   selectTrumpSuit,
 } from "./state/gameSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { Box, Button, VStack, Tag, transition } from "@chakra-ui/react";
-import { Card, PlayedCard, CardInTurn } from "./Types";
+import { Box, Button, VStack, Tag, Card } from "@chakra-ui/react";
+import { PlayedCard, CardInTurn } from "./Types";
 
 interface BattleAreaComponentProps {
   // Add any props you need for your component here
   playedCard: PlayedCard | undefined;
-  cardPlayedHandler: Function;
+  onCardPlayed: Function;
 }
 
 const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
   playedCard,
-  cardPlayedHandler,
+  onCardPlayed,
 }) => {
   const dispatch = useDispatch();
   const currentTurn = useSelector(selectCurrentTurn);
@@ -59,6 +60,10 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
     dispatch(endRound());
   };
 
+  const newTurnHandler = () => {
+    dispatch(newTurn());
+  };
+
   const allPlayersAreReady = players.every(
     (player) => player.hasFolded || player.isIn,
   );
@@ -79,7 +84,6 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
         };
 
   useEffect(() => {
-    console.log("useffect is run");
     if (playedCard) {
       /*
       setOrderedCardsInTurn([
@@ -95,10 +99,15 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
           : [];
       setOrderedCardsInTurn(orderedCards);
       setTimeout(() => {
-        cardPlayedHandler(undefined);
+        onCardPlayed(undefined);
       }, 1000);
     }
   }, [playedCard]);
+  useEffect(() => {
+    if (currentTurn?.cardsPlayed.length === 0) {
+      setOrderedCardsInTurn([]);
+    }
+  }, [currentTurn?.cardsPlayed]);
 
   const cardItems =
     orderedCardsOnTable.map((cardInTurn, index) => {
@@ -135,10 +144,16 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
             id={`card-${card?.id.toString()}`}
             key={index}
             className={
-              card?.id === currentWinnerCard?.cardId ? "winning-card" : ""
+              card?.id === currentWinnerCard?.cardId
+                ? "winning-card"
+                : card?.suit === currentTurn?.suit
+                  ? "suit-led-card"
+                  : ""
             }
+            color={card?.color === "Red" ? "red" : "black"}
+            backgroundColor="white"
           >
-            {card?.name} of {card?.suit}
+            {card?.name} of {card?.suitSymbol}
           </Tag>
         </motion.div>
       );
@@ -183,51 +198,59 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
 
   return (
     <Box id="battleArea">
-      <VStack id="cardsInTurn" ref={cardsInTurnRef}>
+      <VStack w="30%" alignItems="end" id="cardsInTurn">
         {currentTurn && (
           <Reorder.Group
-            layout
             values={cardItems}
             onReorder={() => console.log("reorder")}
+            ref={cardsInTurnRef}
           >
             {cardItems.map((item, index) => (
-              <Reorder.Item key={`item-${item.key}`} value={item}>
+              <Reorder.Item layout key={`item-${item.key}`} value={item}>
                 {item}
               </Reorder.Item>
             ))}
           </Reorder.Group>
         )}
       </VStack>
-      <div id="roundInfo">
-        <>
-          <h3>Round number {currentRound?.roundNumber}</h3>
+      <Card padding={2}>
+        <VStack align="start" id="roundInfo">
+          <h3>Round number: {currentRound?.roundNumber}</h3>
           <h3>Winner: {winner?.name}</h3>
           <h4>Turn number: {turnNumber}</h4>
           <h3>
-            Trump Suit{" "}
+            Trump Suit:{" "}
             {currentRound?.hiddenTrumpSuit && !allPlayersAreReady
               ? "FORDEKT"
               : trumpSuit?.suit}
           </h3>
-          <div>Round pot {currentRound?.roundPot}</div>
-          <div>Round state {currentRound?.roundState}</div>
+          <div>Round pot: {currentRound?.roundPot}</div>
+          <div>Round state: {currentRound?.roundState}</div>
           <div>Lead suit: {currentRound?.turns.at(-1)?.suit} </div>
-          <div>
-            <Button
-              style={newRoundButtonStyle}
-              disabled={
-                !(
-                  currentRound?.roundState === "RoundOver" ||
-                  currentRound?.roundState === "GameOver"
-                )
-              }
-              onClick={() => newRoundHandler()}
-            >
-              New Round
-            </Button>
-          </div>
-        </>
-      </div>
+          {currentRound?.roundState === "TurnOver" && (
+            <div>
+              <Button onClick={() => newTurnHandler()}>New Turn</Button>
+            </div>
+          )}
+          {(currentRound?.roundState === "RoundOver" ||
+            currentRound?.roundState === "GameOver") && (
+            <div>
+              <Button
+                style={newRoundButtonStyle}
+                disabled={
+                  !(
+                    currentRound?.roundState === "RoundOver" ||
+                    currentRound?.roundState === "GameOver"
+                  )
+                }
+                onClick={() => newRoundHandler()}
+              >
+                New Round
+              </Button>
+            </div>
+          )}
+        </VStack>
+      </Card>
     </Box>
   );
 };

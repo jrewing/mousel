@@ -12,7 +12,7 @@ const GameComponent: React.FC<GameComponentProps> = () => {
   const [playedCard, setPlayedCard] = useState<PlayedCard | undefined>();
 
   //Parameter is a ref from useRef
-  function cardPlayedHandler(playedCard: PlayedCard | undefined) {
+  function onCardPlayed(playedCard: PlayedCard | undefined) {
     if (playedCard !== undefined) {
       setPlayedCard(playedCard);
     } else {
@@ -30,7 +30,7 @@ const GameComponent: React.FC<GameComponentProps> = () => {
               className={`player player-${index}`}
             >
               <PlayerComponent
-                onCardPlayed={cardPlayedHandler}
+                onCardPlayed={onCardPlayed}
                 playerId={player.id}
               />
             </div>
@@ -38,7 +38,7 @@ const GameComponent: React.FC<GameComponentProps> = () => {
         </div>
         <BattleAreaComponent
           playedCard={playedCard}
-          cardPlayedHandler={cardPlayedHandler}
+          onCardPlayed={onCardPlayed}
         />
       </div>
     </div>

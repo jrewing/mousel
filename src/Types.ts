@@ -23,6 +23,7 @@ export type GameState =
   | "TrumpReady"
   | "RoundSettled"
   | "RoundOver"
+  | "TurnOver"
   | "Showdown"
   | "SmallBlinds"
   | "GameOver";
@@ -36,6 +37,7 @@ export type Game = {
   currentRound: number;
   rounds: Round[];
   initialized: boolean;
+  autoSetup: boolean;
   canFlipTrump: boolean;
 };
 
