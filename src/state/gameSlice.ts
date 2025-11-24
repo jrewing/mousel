@@ -1214,7 +1214,7 @@ export function selectPlayerWhoCanFlipTrump(state: { game: Game }) {
     const index = (startId + i) % numberOfPlayers;
     const player = state.game.players.find((player) => player.id === index);
     if (
-      player?.hasFlippedTrump === false &&
+      !player?.hasFlippedTrump &&
       !player?.hasRefusedToFlipTrump &&
       !player?.hasFolded
     ) {
