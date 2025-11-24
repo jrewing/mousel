@@ -47,7 +47,7 @@ const createPlayers = (numberOfPlayers: number) => {
   for (let i = 0; i < numberOfPlayers; i++) {
     const player = {
       id: i,
-      name: `Player ${i}`,
+      name: i === 0 ? "You" : `AI Player ${i}`,
       hasFolded: false,
       isDealer: false,
       hand: [],
@@ -65,6 +65,7 @@ const createPlayers = (numberOfPlayers: number) => {
       hasRefusedTrump: false,
       hasRefusedTrumpEarly: false,
       isIn: false,
+      isAI: i !== 0, // Player 0 is human, rest are AI
     } as Player;
     players.push(player);
   }
@@ -955,7 +956,7 @@ const gameSlice = createSlice({
           player.hand = [];
           player.tricks = 0;
           player.hasFolded = false;
-          player.isDealer = false;
+          player.isDealer = player.id === newRound.dealer;
           player.isSmallBlind = false;
           player.hasExchangedCards = false;
           player.isDeclarer = false;
