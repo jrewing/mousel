@@ -38,10 +38,10 @@ import {
 } from "@chakra-ui/react";
 import { PlayedCard } from "./Types";
 
-interface PlayerComponentProps {
+type PlayerComponentProps = {
   playerId: number;
   onCardPlayed: (playedCard: PlayedCard) => void;
-}
+};
 
 const PlayerComponent: React.FC<PlayerComponentProps> = ({
   playerId,
@@ -212,6 +212,9 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
         <Stack divider={<StackDivider />} spacing="1">
           <Card p={1} colorScheme="red">
             Bank: {player?.bank}ℳ
+          </Card>
+          <Card p={1} colorScheme="blue">
+            Tricks: {player?.tricks}
           </Card>
           <HStack minH={6} justifyContent="center">
             {!player?.isAI && (

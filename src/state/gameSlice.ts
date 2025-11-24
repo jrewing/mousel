@@ -8,7 +8,6 @@ import {
   Value,
   Round,
   Turn,
-  GameState,
 } from "../Types";
 
 // Step 1: Define the initial state
@@ -45,7 +44,7 @@ const initialRoundState: Round = {
 const createPlayers = (numberOfPlayers: number) => {
   const players = [] as Player[];
   for (let i = 0; i < numberOfPlayers; i++) {
-    const player = {
+    const player: Player = {
       id: i,
       name: i === 0 ? "You" : `AI Player ${i}`,
       hasFolded: false,
@@ -53,7 +52,6 @@ const createPlayers = (numberOfPlayers: number) => {
       hand: [],
       tricks: 0,
       isTurn: false,
-      isFolded: false,
       hasExchangedCards: false,
       isSmallBlind: false,
       isDeclarer: false,
@@ -65,8 +63,9 @@ const createPlayers = (numberOfPlayers: number) => {
       hasRefusedTrump: false,
       hasRefusedTrumpEarly: false,
       isIn: false,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       isAI: i !== 0, // Player 0 is human, rest are AI
-    } as Player;
+    };
     players.push(player);
   }
   return players;
@@ -195,10 +194,10 @@ const gameSlice = createSlice({
     setAutoSetup(state, action: PayloadAction<boolean>) {
       state.autoSetup = action.payload;
     },
-    setGameCanFlipTrump(state, action: PayloadAction<boolean>) {
-      state.canFlipTrump = action.payload;
+    setGameCanFlipTrump(state) {
+      state.canFlipTrump = true;
     },
-    newRound(state, action: PayloadAction<{ pot: number }>) {
+    newRound(state) {
       state.currentRound++;
       const newRoundState = {
         ...initialRoundState,
@@ -246,9 +245,9 @@ const gameSlice = createSlice({
           state.rounds[state.currentRound].roundState === "0Cards")
       ) {
         if (
-          state.players
+          !state.players
             .filter((player) => !player.isDealer)
-            .every((player) => player.isSmallBlind) === false
+            .every((player) => player.isSmallBlind)
         ) {
           console.warn(
             "DealCards: All players have not set small blind. Can´t deal cards",
@@ -268,11 +267,11 @@ const gameSlice = createSlice({
       }
 
       for (let i = 0; i < 2; i++) {
-        for (let j = 0; j < state.players.length; j++) {
+        for (const player of state.players) {
           //Find the first card in the deck not dealt or discarded or played
           const card = state.deck.find((card) => card.isFresh);
           if (card) {
-            state.players[j].hand.push(card.id);
+            player.hand.push(card.id);
             card.isDealt = true;
             card.isFresh = false;
           }
@@ -483,7 +482,7 @@ const gameSlice = createSlice({
         return;
       }
 
-      if (state.rounds[state.currentRound].trumpForSale === false) {
+      if (!state.rounds[state.currentRound].trumpForSale) {
         console.warn("Trump is not for sale. Cant take trump");
         return;
       }
@@ -525,7 +524,7 @@ const gameSlice = createSlice({
         return;
       }
 
-      if (state.rounds[state.currentRound].trumpForSale === false) {
+      if (!state.rounds[state.currentRound].trumpForSale) {
         console.warn("Trump is not for sale. Cant take trump");
         return;
       }
@@ -560,7 +559,7 @@ const gameSlice = createSlice({
         return;
       }
 
-      if (state.rounds[state.currentRound].trumpForSale === true) {
+      if (state.rounds[state.currentRound].trumpForSale) {
         console.warn("Trump is for sale. Cant flip trump");
         return;
       }
@@ -600,7 +599,7 @@ const gameSlice = createSlice({
         return;
       }
 
-      if (state.rounds[state.currentRound].trumpForSale === true) {
+      if (state.rounds[state.currentRound].trumpForSale) {
         console.warn("Trump is for sale. Cant flip trump");
         return;
       }
@@ -789,7 +788,7 @@ const gameSlice = createSlice({
         currentTurn?.cardsPlayed.length < playersInRound.length
       ) {
         if (currentTurn.cardsPlayed.length === 0) {
-          if (state.rounds.at(-1) && state.rounds.at(-1)!.turns.at(-1)) {
+          if (state.rounds.at(-1)?.turns.at(-1)) {
             state.rounds.at(-1)!.turns.at(-1)!.suit = card.suit;
           }
         }
@@ -835,8 +834,7 @@ const gameSlice = createSlice({
 
       //if all players who are in and not folded have played a card, end turn
       if (
-        currentTurn &&
-        currentTurn.cardsPlayed &&
+        currentTurn?.cardsPlayed &&
         currentTurn?.cardsPlayed?.length >= playersInRound.length
       ) {
         const winner = calculateWinner(
@@ -1133,7 +1131,7 @@ export const isCardPlayable = (state: { game: Game }, cardId: number) => {
     if (hasCardOfSuitLed && card?.suit === suitLed) {
       return true;
     }
-    if (hasCardOfSuitLed === false) {
+    if (!hasCardOfSuitLed) {
       return true;
     }
   }
@@ -1162,7 +1160,7 @@ export const selectPlayerWhoShouldExchangeCards = (state: { game: Game }) => {
   //the first player to exchange cards is the player who took the trump
   const playerTookTrump = state.game.players.find(
     (player) => player.hasTakenTrump,
-  ) as Player | undefined;
+  );
 
   if (playerTookTrump && !playerTookTrump.hasExchangedCards) {
     console.warn("Player who took trump has not exchanged cards");
@@ -1217,7 +1215,7 @@ export function selectPlayerWhoCanFlipTrump(state: { game: Game }) {
     const player = state.game.players.find((player) => player.id === index);
     if (
       player?.hasFlippedTrump === false &&
-      player?.hasRefusedToFlipTrump === false &&
+      !player?.hasRefusedToFlipTrump &&
       !player?.hasFolded
     ) {
       return player;
@@ -1232,7 +1230,7 @@ export const selectPlayerWhoCanTakeTrump = (state: { game: Game }) => {
   }
 
   //if trumpisforsale false, return undefined
-  if (state.game.rounds[state.game.currentRound].trumpForSale === false) {
+  if (!state.game.rounds[state.game.currentRound].trumpForSale) {
     return;
   }
 
@@ -1250,8 +1248,8 @@ export const selectPlayerWhoCanTakeTrump = (state: { game: Game }) => {
 
   const numberOfPlayers = state.game.numberOfPlayers;
   if (
-    dealer?.hasTakenTrump === false &&
-    dealer?.hasRefusedTrump === false &&
+    !dealer?.hasTakenTrump &&
+    !dealer?.hasRefusedTrump &&
     !dealer?.hasFolded &&
     state.game.rounds[state.game.currentRound].roundState === "2Cards"
   ) {
@@ -1261,7 +1259,7 @@ export const selectPlayerWhoCanTakeTrump = (state: { game: Game }) => {
   //If roundstate is 4Cards, and dealer has not taken trump, return first player who has not taken trump and not folded
   if (
     state.game.rounds[state.game.currentRound].roundState === "4Cards" &&
-    dealer?.hasTakenTrumpEarly === false
+    !dealer?.hasTakenTrumpEarly
   ) {
     const startId = (dealer?.id + 1) % numberOfPlayers; // Start from the player next to the dealer
     for (let i = 0; i < numberOfPlayers; i++) {
@@ -1269,7 +1267,7 @@ export const selectPlayerWhoCanTakeTrump = (state: { game: Game }) => {
       const player = state.game.players.find((player) => player.id === index);
       if (
         player?.hasTakenTrump === false &&
-        player?.hasRefusedTrump === false &&
+        !player?.hasRefusedTrump &&
         !player?.hasFolded
       ) {
         return player;
@@ -1297,8 +1295,8 @@ export const selectPlayerWhoCanFoldOrStay = (state: { game: Game }) => {
     const index = (playerWhoTookTrumpIndex + i) % numberOfPlayers;
     const player = state.game.players[index];
     if (
-      player?.hasFolded === false &&
-      player?.isIn === false &&
+      !player?.hasFolded &&
+      !player?.isIn &&
       !player?.hasTakenTrump &&
       !player.hasExchangedCards
     ) {
