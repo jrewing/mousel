@@ -119,7 +119,7 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
         )
       : [];
     setOrderedCardsInTurn(orderedCards);
-  }, [currentTurn?.cardsPlayed, currentTurn?.suit, trumpSuit?.suit, game.deck]);
+  }, [currentTurn?.cardsPlayed, currentTurn?.suit, trumpSuit?.suit, cardLookup]);
 
   function sortCards(cards: CardInTurn[], leadSuit: string, trumpSuit: string) {
     //Copy cards to avoid mutating the original array
