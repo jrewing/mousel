@@ -1,7 +1,6 @@
 import React, { useRef } from "react";
 import { Card, PlayedCard, Player } from "./Types";
 import {
-  isPlayersTurn,
   toggleSelectCard,
   playCard,
   isCardPlayable,

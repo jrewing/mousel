@@ -1,4 +1,4 @@
-import React, { Dispatch, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import "./styles/styles.css";
 import GameComponent from "./GameComponent";
 import { Provider, useDispatch, useSelector } from "react-redux";
@@ -26,7 +26,6 @@ import { store } from "./state/store";
 import { Box, Flex } from "@chakra-ui/layout";
 import {
   VStack,
-  Card,
   Checkbox,
   useColorMode,
   Button,
@@ -35,11 +34,9 @@ import {
   DrawerContent,
   DrawerCloseButton,
   IconButton,
-  Icon,
   useDisclosure,
   DrawerBody,
 } from "@chakra-ui/react";
-import { GameState, Player } from "./Types";
 import { HamburgerIcon } from "@chakra-ui/icons";
 
 function App() {
@@ -141,7 +138,6 @@ function AppContent() {
     playerWhoShouldExcangeCards,
   ]);
 
-  const playerWhoCanFold1 = useSelector(selectPlayerWhoCanFoldOrStay);
   const preloadGameStateHandler = () => {
     dispatch(setAutoSetup(true));
   };
@@ -176,9 +172,8 @@ function AppContent() {
               <Checkbox
                 id="can-flip-trump"
                 type="checkbox"
-                onClick={() =>
-                  dispatch(setGameCanFlipTrump(!game.canFlipTrump))
-                }
+                isChecked={game.canFlipTrump}
+                onChange={() => dispatch(setGameCanFlipTrump())}
               >
                 Can Flip Trump
               </Checkbox>

@@ -35,6 +35,7 @@ import {
  * Hook to manage AI player actions
  * Automatically triggers AI decisions when it's their turn
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const useAIPlayer = () => {
   const dispatch = useDispatch();
   const game = useSelector(selectGame);
@@ -62,7 +63,7 @@ export const useAIPlayer = () => {
         player.isAI &&
         !player.isDealer &&
         !player.isSmallBlind &&
-        round.roundPot < game.numberOfPlayers - 1
+        round.roundPot < game.numberOfPlayers - 1,
     );
 
     if (aiPlayersToAnte.length === 0) return;
@@ -70,13 +71,16 @@ export const useAIPlayer = () => {
     processingRef.current = true;
     const timeoutIds: NodeJS.Timeout[] = [];
     aiPlayersToAnte.forEach((player, idx) => {
-      const timeoutId = setTimeout(() => {
-        dispatch(addWager({ player, amount: 1 }));
-        // Only clear processingRef after last AI player posts ante
-        if (idx === aiPlayersToAnte.length - 1) {
-          processingRef.current = false;
-        }
-      }, 500 + idx * 200); // stagger for realism
+      const timeoutId = setTimeout(
+        () => {
+          dispatch(addWager({ player, amount: 1 }));
+          // Only clear processingRef after last AI player posts ante
+          if (idx === aiPlayersToAnte.length - 1) {
+            processingRef.current = false;
+          }
+        },
+        500 + idx * 200,
+      ); // stagger for realism
       timeoutIds.push(timeoutId);
     });
     return () => {
@@ -154,7 +158,7 @@ export const useAIPlayer = () => {
   useEffect(() => {
     if (processingRef.current) return;
 
-    if (!playerWhoCanTakeTrump || !playerWhoCanTakeTrump.isAI) return;
+    if (!playerWhoCanTakeTrump?.isAI) return;
 
     const canTakeEarly =
       round?.roundState === "2Cards" &&
@@ -196,7 +200,7 @@ export const useAIPlayer = () => {
   useEffect(() => {
     if (processingRef.current) return;
 
-    if (!playerWhoCanFoldOrStay || !playerWhoCanFoldOrStay.isAI) return;
+    if (!playerWhoCanFoldOrStay?.isAI) return;
 
     processingRef.current = true;
     const timeoutId = setTimeout(() => {
@@ -225,8 +229,7 @@ export const useAIPlayer = () => {
     if (processingRef.current) return;
 
     if (
-      !playerWhoShouldExchangeCards ||
-      !playerWhoShouldExchangeCards.isAI ||
+      !playerWhoShouldExchangeCards?.isAI ||
       playerWhoShouldExchangeCards.hasExchangedCards ||
       round?.roundState !== "4Cards" ||
       !playerWhoShouldExchangeCards.isIn
