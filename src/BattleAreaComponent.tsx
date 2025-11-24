@@ -108,7 +108,13 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
         onCardPlayed(undefined);
       }, 1000);
     }
-  }, [playedCard]);
+  }, [
+    playedCard,
+    onCardPlayed,
+    currentTurn?.cardsPlayed,
+    currentRound?.turns,
+    trumpSuit?.suit,
+  ]);
 
   useEffect(() => {
     const orderedCards = currentTurn?.cardsPlayed.length
