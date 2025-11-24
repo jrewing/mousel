@@ -31,6 +31,6 @@ export default [
     ...compat.extends("xo-typescript"), // Apply full XO rules with type-checking
     ...tseslint.configs.recommended,
     ...tseslint.configs.stylisticTypeChecked,
-    ...pluginReactConfig,
   },
+  pluginReactConfig,
 ];
