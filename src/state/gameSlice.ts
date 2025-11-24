@@ -194,8 +194,8 @@ const gameSlice = createSlice({
     setAutoSetup(state, action: PayloadAction<boolean>) {
       state.autoSetup = action.payload;
     },
-    setGameCanFlipTrump(state) {
-      state.canFlipTrump = true;
+    setGameCanFlipTrump(state, action: PayloadAction<boolean>) {
+      state.canFlipTrump = action.payload;
     },
     newRound(state) {
       state.currentRound++;
