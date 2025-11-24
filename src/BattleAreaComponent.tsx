@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { motion, Reorder, color } from "framer-motion";
+import { Reorder } from "framer-motion";
 import {
   calculateWinner,
   endRound,
@@ -125,7 +125,12 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
         )
       : [];
     setOrderedCardsInTurn(orderedCards);
-  }, [currentTurn?.cardsPlayed, currentTurn?.suit, trumpSuit?.suit, cardLookup]);
+  }, [
+    currentTurn?.cardsPlayed,
+    currentTurn?.suit,
+    trumpSuit?.suit,
+    cardLookup,
+  ]);
 
   function sortCards(cards: CardInTurn[], leadSuit: string, trumpSuit: string) {
     //Copy cards to avoid mutating the original array

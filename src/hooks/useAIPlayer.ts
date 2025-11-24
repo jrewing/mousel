@@ -19,7 +19,6 @@ import {
   playerFolds,
   exchangeCards,
   setTrumpSuit,
-  discardCard,
   dealCards,
   addWager,
   toggleSelectCard,
@@ -209,8 +208,13 @@ export const useAIPlayer = () => {
       "AI exchanging cards for player:",
       playerWhoShouldExchangeCards.name,
     );
+
+    let isMounted = true;
     processingRef.current = true;
-    setTimeout(() => {
+
+    const timeoutId = setTimeout(() => {
+      if (!isMounted || !processingRef.current) return;
+
       // Select cards to discard using checkbox system
       const cardsToDiscard = selectCardsToDiscard(
         playerWhoShouldExchangeCards,
@@ -234,11 +238,22 @@ export const useAIPlayer = () => {
       });
 
       // Wait a bit for selections to register, then exchange
-      setTimeout(() => {
+      const innerTimeoutId = setTimeout(() => {
+        if (!isMounted || !processingRef.current) return;
+
         dispatch(exchangeCards(playerWhoShouldExchangeCards));
         processingRef.current = false;
       }, 300);
+
+      // Store inner timeout ID for cleanup
+      return () => clearTimeout(innerTimeoutId);
     }, 1000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      processingRef.current = false;
+    };
   }, [
     playerWhoShouldExchangeCards,
     deck,

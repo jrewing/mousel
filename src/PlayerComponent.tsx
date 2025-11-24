@@ -287,7 +287,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
               </span>
             )}
           </HStack>
-          <HStack spacing={-10}>
+          <HStack spacing={2}>
             {orderedHand.map((cardId, index: number) => {
               const card = deck.find((c) => c.id === cardId);
               return (
