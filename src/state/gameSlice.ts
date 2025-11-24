@@ -1266,7 +1266,7 @@ export const selectPlayerWhoCanTakeTrump = (state: { game: Game }) => {
       const index = (startId + i) % numberOfPlayers;
       const player = state.game.players.find((player) => player.id === index);
       if (
-        player?.hasTakenTrump === false &&
+        !player?.hasTakenTrump &&
         !player?.hasRefusedTrump &&
         !player?.hasFolded
       ) {
