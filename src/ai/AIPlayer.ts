@@ -105,12 +105,13 @@ export const selectCardsToDiscard = (
   }
   // If we have 2 trumps, exchange medium-weak cards
   else if (trumpCards.length === 2) {
-    // Exchange cards with value 2-9
+    // Exchange cards with value 5-Queen
     const weakCards = sortedOtherCards.filter((c) => c.value <= 12);
     cardsToExchange.push(...weakCards.slice(0, 2));
   }
   // If we have 3+ trumps, only exchange very weak cards
   else {
+    // Exchange cards with value 5-Queen
     const veryWeakCards = sortedOtherCards.filter((c) => c.value <= 12);
     cardsToExchange.push(...veryWeakCards.slice(0, 1));
   }
