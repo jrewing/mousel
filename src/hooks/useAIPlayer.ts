@@ -233,6 +233,7 @@ export const useAIPlayer = () => {
     );
 
     let isMounted = true;
+    let innerTimeoutId: NodeJS.Timeout | undefined;
     processingRef.current = true;
 
     const timeoutId = setTimeout(() => {
@@ -261,20 +262,20 @@ export const useAIPlayer = () => {
       });
 
       // Wait a bit for selections to register, then exchange
-      const innerTimeoutId = setTimeout(() => {
+      innerTimeoutId = setTimeout(() => {
         if (!isMounted || !processingRef.current) return;
 
         dispatch(exchangeCards(playerWhoShouldExchangeCards));
         processingRef.current = false;
       }, 300);
-
-      // Store inner timeout ID for cleanup
-      return () => clearTimeout(innerTimeoutId);
     }, 1000);
 
     return () => {
       isMounted = false;
       clearTimeout(timeoutId);
+      if (innerTimeoutId) {
+        clearTimeout(innerTimeoutId);
+      }
       processingRef.current = false;
     };
   }, [
