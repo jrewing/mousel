@@ -14,11 +14,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { Box, Button, VStack, Tag, Card } from "@chakra-ui/react";
 import { PlayedCard, CardInTurn } from "./Types";
 
-interface BattleAreaComponentProps {
+type BattleAreaComponentProps = {
   // Add any props you need for your component here
   playedCard: PlayedCard | undefined;
-  onCardPlayed: Function;
-}
+  onCardPlayed: (card: PlayedCard | undefined) => void;
+};
 
 const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
   playedCard,
@@ -34,13 +34,15 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
   const winner = players.find((player) => player.id === currentTurn?.winner);
   const deck = game.deck;
   const cardsInTurnRef = useRef<HTMLDivElement>(null);
-  const [cardsInTurnRect, setCardsInTurnRect] = useState<DOMRect | null>(null);
+  const [cardsInTurnRect, setCardsInTurnRect] = useState<DOMRect | undefined>(
+    undefined,
+  );
   const [orderedCardsOnTable, setOrderedCardsInTurn] = useState<CardInTurn[]>(
     [],
   );
 
   const cardLookup = useMemo(() => {
-    const lookup: { [id: string]: (typeof game.deck)[0] } = {};
+    const lookup: Record<string, (typeof game.deck)[0]> = {};
     for (const card of game.deck) {
       lookup[card.id] = card;
     }

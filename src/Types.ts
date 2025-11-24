@@ -62,7 +62,7 @@ export type Round = {
 export type Turn = {
   nextPlayer: number | undefined;
   winner: number | undefined;
-  cardsPlayed: { playerId: number; cardId: number; sequence: number }[];
+  cardsPlayed: Array<{ playerId: number; cardId: number; sequence: number }>;
   suit: Suit | undefined;
 };
 
@@ -100,6 +100,7 @@ export type Player = {
   hasRefusedTrumpEarly: boolean;
   isIn: boolean;
   isAI: boolean;
+  isTurn: boolean;
 };
 
 export type PlayedCard = {

@@ -28,6 +28,18 @@ export default [
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      "@typescript-eslint/indent": "off",
+      indent: "off",
+      quotes: "off",
+      "@typescript-eslint/quotes": "off",
+      "object-curly-spacing": "off",
+      "@typescript-eslint/object-curly-spacing": "off",
+      "@typescript-eslint/consistent-type-definitions": "off",
+      "@typescript-eslint/padding-line-between-statements": "off",
+      "@typescript-eslint/no-confusing-void-expression": "off",
+      "@typescript-eslint/consistent-type-imports": "off",
+    },
   },
   ...tseslint.configs.recommended,
   ...tseslint.configs.stylisticTypeChecked,

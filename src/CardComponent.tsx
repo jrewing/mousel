@@ -1,7 +1,6 @@
 import React, { useRef } from "react";
 import { Card, PlayedCard, Player } from "./Types";
 import {
-  isPlayersTurn,
   toggleSelectCard,
   playCard,
   isCardPlayable,
@@ -16,11 +15,11 @@ import { RootState } from "./state/store";
 import { Button, IconButton, Tooltip, VStack } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 
-interface CardComponentProps {
+type CardComponentProps = {
   card: Card;
   player: Player;
   onCardPlayed: (playedCard: PlayedCard) => void;
-}
+};
 
 const CardComponent: React.FC<CardComponentProps> = ({
   onCardPlayed,
