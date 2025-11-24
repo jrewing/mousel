@@ -10,11 +10,26 @@ import pluginJs from "@eslint/js";
 // mimic CommonJS variables -- not needed if using CommonJS
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({baseDirectory: __dirname, recommendedConfig: pluginJs.configs.recommended});
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: pluginJs.configs.recommended,
+});
 
 export default [
-  {languageOptions: { globals: globals.browser }},
   ...compat.extends("xo-typescript"),
+  {
+    // 1. A specific, simple configuration for the ESLint config file itself
+    files: ["eslint.config.js"],
+    ...tseslint.configs.disableTypeChecked, // IMPORTANT: Disable type-checking
+  },
+  {
+    // 2. A configuration for all your project's source files
+    files: ["src/**/*.{ts,tsx}"],
+    languageOptions: {
+      globals: globals.browser,
+    },
+  },
   ...tseslint.configs.recommended,
+  ...tseslint.configs.stylisticTypeChecked,
   pluginReactConfig,
 ];

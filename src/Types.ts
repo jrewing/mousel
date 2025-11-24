@@ -99,6 +99,7 @@ export type Player = {
   hasTakenTrumpEarly: boolean;
   hasRefusedTrumpEarly: boolean;
   isIn: boolean;
+  isAI: boolean;
 };
 
 export type PlayedCard = {

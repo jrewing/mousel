@@ -95,7 +95,7 @@ const CardComponent: React.FC<CardComponentProps> = ({
         {["Ace", "King", "Queen", "Jack"].includes(card.name)
           ? card.name.charAt(0)
           : card.name}{" "}
-        {card.suitSymbol}
+        <span style={{ fontSize: "1.2em" }}>&nbsp;{card.suitSymbol}</span>
       </Button>
       {!isTrumpForSale && selectable && (
         <input
