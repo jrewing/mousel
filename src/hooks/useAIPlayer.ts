@@ -65,11 +65,14 @@ export const useAIPlayer = () => {
         round.roundPot < game.numberOfPlayers - 1
       ) {
         processingRef.current = true;
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           dispatch(addWager({ player, amount: 1 }));
           processingRef.current = false;
         }, 500);
-        return; // Post one at a time
+        return () => {
+          clearTimeout(timeoutId);
+          processingRef.current = false;
+        };
       }
     }
   }, [
@@ -92,7 +95,7 @@ export const useAIPlayer = () => {
       trumpSuit === undefined
     ) {
       processingRef.current = true;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         const trumpCard = round.trumpSuit;
         const hideIt = decideHideTrump(dealer, deck, trumpCard || undefined);
         dispatch(setTrumpSuit({ hidden: hideIt }));
@@ -101,6 +104,11 @@ export const useAIPlayer = () => {
         }
         processingRef.current = false;
       }, 800);
+
+      return () => {
+        clearTimeout(timeoutId);
+        processingRef.current = false;
+      };
     }
   }, [dealer, round?.roundState, trumpSuit, deck, dispatch, round?.trumpSuit]);
 
@@ -116,10 +124,15 @@ export const useAIPlayer = () => {
 
     if (dealer && dealer.isAI && readyToDeal) {
       processingRef.current = true;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         dispatch(dealCards());
         processingRef.current = false;
       }, 800);
+
+      return () => {
+        clearTimeout(timeoutId);
+        processingRef.current = false;
+      };
     }
   }, [
     dealer,
@@ -145,7 +158,7 @@ export const useAIPlayer = () => {
 
     if (canTakeEarly || canTakeNormal) {
       processingRef.current = true;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         const shouldTake = decideTakeTrump(
           playerWhoCanTakeTrump,
           deck,
@@ -164,6 +177,11 @@ export const useAIPlayer = () => {
         }
         processingRef.current = false;
       }, 1000);
+
+      return () => {
+        clearTimeout(timeoutId);
+        processingRef.current = false;
+      };
     }
   }, [playerWhoCanTakeTrump, round?.roundState, trumpSuit, deck, dispatch]);
 
@@ -174,7 +192,7 @@ export const useAIPlayer = () => {
     if (!playerWhoCanFoldOrStay || !playerWhoCanFoldOrStay.isAI) return;
 
     processingRef.current = true;
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       const decision = decideStayOrFold(
         playerWhoCanFoldOrStay,
         deck,
@@ -188,6 +206,11 @@ export const useAIPlayer = () => {
       }
       processingRef.current = false;
     }, 1000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      processingRef.current = false;
+    };
   }, [playerWhoCanFoldOrStay, deck, trumpSuit, dispatch]);
 
   // AI handles exchanging cards
@@ -283,11 +306,15 @@ export const useAIPlayer = () => {
 
         if (card) {
           processingRef.current = true;
-          setTimeout(() => {
+          const timeoutId = setTimeout(() => {
             dispatch(playCard({ cardId: card.id, playerId: player.id }));
             processingRef.current = false;
           }, 1200);
-          break; // Only process one at a time
+
+          return () => {
+            clearTimeout(timeoutId);
+            processingRef.current = false;
+          };
         }
       }
     }
