@@ -213,7 +213,7 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
           </Reorder.Group>
         )}
       </VStack>
-      <Card padding={2} position="fixed" top="20px" right="20px" zIndex={1000}>
+      <Card padding={2} position="sticky" top="20px" right="20px" zIndex={1000}>
         <VStack align="start" id="roundInfo">
           <h3>Round number: {currentRound?.roundNumber}</h3>
           <h3>Winner: {winner?.name}</h3>
