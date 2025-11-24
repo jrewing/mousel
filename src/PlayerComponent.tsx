@@ -38,10 +38,10 @@ import {
 } from "@chakra-ui/react";
 import { PlayedCard } from "./Types";
 
-interface PlayerComponentProps {
+type PlayerComponentProps = {
   playerId: number;
   onCardPlayed: (playedCard: PlayedCard) => void;
-}
+};
 
 const PlayerComponent: React.FC<PlayerComponentProps> = ({
   playerId,

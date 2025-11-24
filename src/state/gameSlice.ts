@@ -8,7 +8,6 @@ import {
   Value,
   Round,
   Turn,
-  GameState,
 } from "../Types";
 
 // Step 1: Define the initial state
@@ -45,7 +44,7 @@ const initialRoundState: Round = {
 const createPlayers = (numberOfPlayers: number) => {
   const players = [] as Player[];
   for (let i = 0; i < numberOfPlayers; i++) {
-    const player = {
+    const player: Player = {
       id: i,
       name: i === 0 ? "You" : `AI Player ${i}`,
       hasFolded: false,
@@ -53,7 +52,6 @@ const createPlayers = (numberOfPlayers: number) => {
       hand: [],
       tricks: 0,
       isTurn: false,
-      isFolded: false,
       hasExchangedCards: false,
       isSmallBlind: false,
       isDeclarer: false,
@@ -65,8 +63,9 @@ const createPlayers = (numberOfPlayers: number) => {
       hasRefusedTrump: false,
       hasRefusedTrumpEarly: false,
       isIn: false,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       isAI: i !== 0, // Player 0 is human, rest are AI
-    } as Player;
+    };
     players.push(player);
   }
   return players;

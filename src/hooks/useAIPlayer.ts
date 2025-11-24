@@ -108,7 +108,7 @@ export const useAIPlayer = () => {
       processingRef.current = true;
       const timeoutId = setTimeout(() => {
         const trumpCard = round.trumpSuit;
-        const hideIt = decideHideTrump(dealer, deck, trumpCard || undefined);
+        const hideIt = decideHideTrump(dealer, deck, trumpCard ?? undefined);
         dispatch(setTrumpSuit({ hidden: hideIt }));
         if (hideIt) {
           dispatch(takeTrumpEarly(dealer.id));
@@ -173,7 +173,7 @@ export const useAIPlayer = () => {
         const shouldTake = decideTakeTrump(
           playerWhoCanTakeTrump,
           deck,
-          trumpSuit || undefined,
+          trumpSuit ?? undefined,
           canTakeEarly,
         );
 
@@ -207,7 +207,7 @@ export const useAIPlayer = () => {
       const decision = decideStayOrFold(
         playerWhoCanFoldOrStay,
         deck,
-        trumpSuit || undefined,
+        trumpSuit ?? undefined,
       );
 
       if (decision === "fold") {
@@ -253,7 +253,7 @@ export const useAIPlayer = () => {
       const cardsToDiscard = selectCardsToDiscard(
         playerWhoShouldExchangeCards,
         deck,
-        trumpSuit || undefined,
+        trumpSuit ?? undefined,
       );
 
       console.log(
@@ -312,7 +312,7 @@ export const useAIPlayer = () => {
           player,
           deck,
           currentTurn,
-          trumpSuit || undefined,
+          trumpSuit ?? undefined,
         );
 
         if (card) {
