@@ -56,30 +56,37 @@ export const useAIPlayer = () => {
 
     if (!dealer || round?.roundState !== "Initial") return;
 
-    // Check if any AI player needs to post ante
-    for (const player of game.players) {
-      if (
+    // Find all AI players who need to post ante
+    const aiPlayersToAnte = game.players.filter(
+      (player) =>
         player.isAI &&
         !player.isDealer &&
         !player.isSmallBlind &&
         round.roundPot < game.numberOfPlayers - 1
-      ) {
-        processingRef.current = true;
-        const timeoutId = setTimeout(() => {
-          dispatch(addWager({ player, amount: 1 }));
+    );
+
+    if (aiPlayersToAnte.length === 0) return;
+
+    processingRef.current = true;
+    const timeoutIds: NodeJS.Timeout[] = [];
+    aiPlayersToAnte.forEach((player, idx) => {
+      const timeoutId = setTimeout(() => {
+        dispatch(addWager({ player, amount: 1 }));
+        // Only clear processingRef after last AI player posts ante
+        if (idx === aiPlayersToAnte.length - 1) {
           processingRef.current = false;
-        }, 500);
-        return () => {
-          clearTimeout(timeoutId);
-          processingRef.current = false;
-        };
-      }
-    }
+        }
+      }, 500 + idx * 200); // stagger for realism
+      timeoutIds.push(timeoutId);
+    });
+    return () => {
+      timeoutIds.forEach(clearTimeout);
+      processingRef.current = false;
+    };
   }, [
     dealer,
     round?.roundState,
     round?.roundPot,
-    game.players,
     game.numberOfPlayers,
     dispatch,
   ]);
