@@ -291,5 +291,5 @@ export const useAIPlayer = () => {
         }
       }
     }
-  }, [game.players, round?.turns, deck, trumpSuit, dispatch, game, round]);
+  }, [game, round, deck, trumpSuit, dispatch]);
 };
