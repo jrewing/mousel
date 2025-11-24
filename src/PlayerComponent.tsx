@@ -203,7 +203,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
       className={playersTurn ? "active-player" : ""}
       key={playerId}
       backgroundColor="green.800"
-      padding="1vh"
+      padding={2}
     >
       <CardHeader color="gray.200" fontWeight="bold" paddingBottom={0}>
         <h4>{player?.name}</h4>
@@ -214,60 +214,80 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
             Bank: {player?.bank}ℳ
           </Card>
           <HStack minH={6} justifyContent="center">
-            {isDealer && readyToDeal && (
-              <Button onClick={() => dealCardsHandler()}>Deal</Button>
-            )}
+            {!player?.isAI && (
+              <>
+                {isDealer && readyToDeal && (
+                  <Button size="xs" onClick={() => dealCardsHandler()}>
+                    Deal
+                  </Button>
+                )}
 
-            {readyToSetTrump && (
-              <Button onClick={() => setTrumpSuitHandler(false)}>
-                Set Trump Suit
-              </Button>
-            )}
-            {readyToSetTrump && (
-              <Button onClick={() => setTrumpSuitHandler(true)}>
-                Set Trump Suit hidden
-              </Button>
-            )}
+                {readyToSetTrump && (
+                  <Button size="xs" onClick={() => setTrumpSuitHandler(false)}>
+                    Set Trump Suit
+                  </Button>
+                )}
+                {readyToSetTrump && (
+                  <Button size="xs" onClick={() => setTrumpSuitHandler(true)}>
+                    Set Trump Suit hidden
+                  </Button>
+                )}
 
-            {readyToAddWager && (
-              <Button onClick={() => addWagerHandler()}>Add wager</Button>
-            )}
-            {readyToChangeCards && (
-              <Button onClick={() => exchangeCardsHandler()}>
-                Change cards
-              </Button>
-            )}
+                {readyToAddWager && (
+                  <Button size="xs" onClick={() => addWagerHandler()}>
+                    Post ante
+                  </Button>
+                )}
+                {readyToChangeCards && (
+                  <Button size="xs" onClick={() => exchangeCardsHandler()}>
+                    Change cards
+                  </Button>
+                )}
 
-            {readyToFold && (
-              <Button p={1} h={6} onClick={() => fold()}>
-                Fold
-              </Button>
-            )}
-            {readyToFold && <Button onClick={() => iAmIn()}>I am in</Button>}
+                {readyToFold && (
+                  <Button size="xs" onClick={() => fold()}>
+                    Fold
+                  </Button>
+                )}
+                {readyToFold && (
+                  <Button size="xs" onClick={() => iAmIn()}>
+                    I am in
+                  </Button>
+                )}
 
-            {dealer?.id === undefined && (
-              <Button
-                p={1}
-                h={6}
-                colorScheme="red"
-                onClick={() => setDealerHandler()}
-              >
-                Set Dealer
-              </Button>
+                {dealer?.id === undefined && (
+                  <Button
+                    size="xs"
+                    colorScheme="red"
+                    onClick={() => setDealerHandler()}
+                  >
+                    Set Dealer
+                  </Button>
+                )}
+                {!canNotTakeTrumpEarly && (
+                  <Button size="xs" onClick={() => takeTrumpEarlyHandler()}>
+                    Take Trump Early
+                  </Button>
+                )}
+                {!canNotTakeTrump && (
+                  <Button size="xs" onClick={() => takeTrumpHandler()}>
+                    Take Trump
+                  </Button>
+                )}
+                {!canNotTakeTrump && (
+                  <Button size="xs" onClick={() => refuseTrumpHandler()}>
+                    Refuse Trump
+                  </Button>
+                )}
+              </>
             )}
-            {!canNotTakeTrumpEarly && (
-              <Button onClick={() => takeTrumpEarlyHandler()}>
-                Take Trump Early
-              </Button>
-            )}
-            {!canNotTakeTrump && (
-              <Button onClick={() => takeTrumpHandler()}>Take Trump</Button>
-            )}
-            {!canNotTakeTrump && (
-              <Button onClick={() => refuseTrumpHandler()}>Refuse Trump</Button>
+            {player?.isAI && playersTurn && (
+              <span style={{ color: "#90EE90", fontSize: "0.75rem" }}>
+                Thinking...
+              </span>
             )}
           </HStack>
-          <HStack spacing={1}>
+          <HStack spacing={-10}>
             {orderedHand.map((cardId, index: number) => {
               const card = deck.find((c) => c.id === cardId);
               return (

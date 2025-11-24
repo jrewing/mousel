@@ -4,12 +4,16 @@ import { selectGame } from "./state/gameSlice";
 import { useSelector, useDispatch } from "react-redux";
 import BattleAreaComponent from "./BattleAreaComponent";
 import { PlayedCard } from "./Types";
+import { useAIPlayer } from "./hooks/useAIPlayer";
 
 interface GameComponentProps {}
 
 const GameComponent: React.FC<GameComponentProps> = () => {
   const game = useSelector(selectGame);
   const [playedCard, setPlayedCard] = useState<PlayedCard | undefined>();
+
+  // Enable AI players
+  useAIPlayer();
 
   //Parameter is a ref from useRef
   function onCardPlayed(playedCard: PlayedCard | undefined) {

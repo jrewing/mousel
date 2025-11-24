@@ -149,11 +149,14 @@ function AppContent() {
 
   return (
     <Flex p="4">
-      <IconButton
-        aria-label="open left menu"
-        icon={<HamburgerIcon />}
-        onClick={onOpen}
-      />
+      <VStack align="flex-start" spacing={2}>
+        <header className="app-header">Mousel</header>
+        <IconButton
+          aria-label="open left menu"
+          icon={<HamburgerIcon />}
+          onClick={onOpen}
+        />
+      </VStack>
       <Drawer
         isOpen={isOpen}
         placement="left"
@@ -190,7 +193,6 @@ function AppContent() {
         </DrawerContent>
       </Drawer>
       <Flex w="100%" justifyContent="center">
-        <header className="app-header">Mousel</header>
         {gameIsInitialized && <GameComponent />}
       </Flex>
     </Flex>
