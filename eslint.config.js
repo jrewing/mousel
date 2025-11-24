@@ -16,10 +16,10 @@ const compat = new FlatCompat({
 });
 
 export default [
+  ...compat.extends("xo-typescript"),
   {
     // 1. A specific, simple configuration for the ESLint config file itself
     files: ["eslint.config.js"],
-    ...compat.extends("xo-typescript"), // Apply basic XO rules
     ...tseslint.configs.disableTypeChecked, // IMPORTANT: Disable type-checking
   },
   {
@@ -28,9 +28,8 @@ export default [
     languageOptions: {
       globals: globals.browser,
     },
-    ...compat.extends("xo-typescript"), // Apply full XO rules with type-checking
-    ...tseslint.configs.recommended,
-    ...tseslint.configs.stylisticTypeChecked,
   },
+  ...tseslint.configs.recommended,
+  ...tseslint.configs.stylisticTypeChecked,
   pluginReactConfig,
 ];
