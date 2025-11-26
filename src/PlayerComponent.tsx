@@ -513,12 +513,12 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                 role="img"
                 aria-label={
                   player?.hand.length === 5
-                    ? "Select 1 card to discard"
+                    ? "Exchange cards, then you must discard to 4"
                     : "Select cards to exchange"
                 }
                 title={
                   player?.hand.length === 5
-                    ? "Select 1 card to discard"
+                    ? "Exchange cards, then you must discard to 4"
                     : "Select cards to exchange"
                 }
                 style={{

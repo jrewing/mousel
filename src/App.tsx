@@ -173,7 +173,9 @@ function AppContent() {
                 id="can-flip-trump"
                 type="checkbox"
                 isChecked={game.canFlipTrump}
-                onChange={() => dispatch(setGameCanFlipTrump())}
+                onChange={() =>
+                  dispatch(setGameCanFlipTrump(!game.canFlipTrump))
+                }
               >
                 Can Flip Trump
               </Checkbox>
