@@ -314,7 +314,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     height="auto"
                     onClick={() => addWagerHandler()}
                   >
-                    Ante
+                    Post Ante
                   </Button>
                 )}
                 {readyToChangeCards && (
