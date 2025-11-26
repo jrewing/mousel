@@ -194,8 +194,8 @@ const gameSlice = createSlice({
     setAutoSetup(state, action: PayloadAction<boolean>) {
       state.autoSetup = action.payload;
     },
-    setGameCanFlipTrump(state) {
-      state.canFlipTrump = true;
+    setGameCanFlipTrump(state, action: PayloadAction<boolean>) {
+      state.canFlipTrump = action.payload;
     },
     newRound(state) {
       state.currentRound++;
@@ -1214,7 +1214,7 @@ export function selectPlayerWhoCanFlipTrump(state: { game: Game }) {
     const index = (startId + i) % numberOfPlayers;
     const player = state.game.players.find((player) => player.id === index);
     if (
-      player?.hasFlippedTrump === false &&
+      !player?.hasFlippedTrump &&
       !player?.hasRefusedToFlipTrump &&
       !player?.hasFolded
     ) {
@@ -1266,7 +1266,7 @@ export const selectPlayerWhoCanTakeTrump = (state: { game: Game }) => {
       const index = (startId + i) % numberOfPlayers;
       const player = state.game.players.find((player) => player.id === index);
       if (
-        player?.hasTakenTrump === false &&
+        !player?.hasTakenTrump &&
         !player?.hasRefusedTrump &&
         !player?.hasFolded
       ) {
