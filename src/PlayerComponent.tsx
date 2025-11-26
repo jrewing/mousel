@@ -291,7 +291,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     height="auto"
                     onClick={() => setTrumpSuitHandler(false)}
                   >
-                    Set Trump
+                    Set Trump Suit
                   </Button>
                 )}
                 {readyToSetTrump && (
