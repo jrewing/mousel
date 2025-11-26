@@ -361,7 +361,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     colorScheme="red"
                     onClick={() => setDealerHandler()}
                   >
-                    Dealer
+                    Start Game
                   </Button>
                 )}
                 {!canNotTakeTrumpEarly && (
@@ -492,6 +492,19 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                   );
                 })}
           </HStack>
+          {readyToChangeCards && (
+            <div
+              style={{
+                fontSize: "0.75rem",
+                color: "#90EE90",
+                textAlign: "center",
+              }}
+            >
+              {player?.hand.length === 5
+                ? "Select cards to exchange, then discard to 4 cards"
+                : "Select cards you wish to exchange"}
+            </div>
+          )}
           <HStack spacing={1} height="30px" alignItems="flex-start">
             {orderedHand.map((cardId, index: number) => {
               const card = deck.find((c) => c.id === cardId);
@@ -508,29 +521,6 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                 )
               );
             })}
-            {readyToChangeCards && (
-              <span
-                role="img"
-                aria-label={
-                  player?.hand.length === 5
-                    ? "Exchange cards, then you must discard to 4"
-                    : "Select cards to exchange"
-                }
-                title={
-                  player?.hand.length === 5
-                    ? "Exchange cards, then you must discard to 4"
-                    : "Select cards to exchange"
-                }
-                style={{
-                  cursor: "help",
-                  fontSize: "1.2rem",
-                  alignSelf: "center",
-                  marginLeft: "4px",
-                }}
-              >
-                👈
-              </span>
-            )}
           </HStack>
         </Stack>
       </CardBody>

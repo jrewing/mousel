@@ -9,6 +9,7 @@ import {
   isCardSelectable,
   selectTrumpForSale,
   selectTrumpSuit,
+  selectRound,
 } from "./state/gameSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "./state/store";
@@ -37,12 +38,19 @@ const CardComponent: React.FC<CardComponentProps> = ({
   );
 
   const trumpSuit = useSelector(selectTrumpSuit);
+  const round = useSelector(selectRound);
 
   const isPlayable = useSelector((state: RootState) =>
     isCardPlayable(state, card.id),
   );
   const deck = useSelector((state: RootState) => selectDeck(state));
   const isTrumpForSale = useSelector(selectTrumpForSale);
+
+  // Check if this card is the hidden trump card
+  const isHiddenTrumpCard =
+    round?.hiddenTrumpSuit &&
+    card.id === trumpSuit?.id &&
+    round.roundState === "2Cards";
 
   if (card.isDiscarded) {
     return null;
@@ -105,7 +113,21 @@ const CardComponent: React.FC<CardComponentProps> = ({
         }
       >
         {card.isSelected ? (
-          <span style={{ fontSize: "1.2em" }} aria-label="Selected card" role="img">🂠</span>
+          <span
+            style={{ fontSize: "1.2em" }}
+            aria-label="Selected card"
+            role="img"
+          >
+            🂠
+          </span>
+        ) : isHiddenTrumpCard ? (
+          <span
+            style={{ fontSize: "1.2em" }}
+            aria-label="Hidden trump card"
+            role="img"
+          >
+            🂠
+          </span>
         ) : (
           <>
             {["Ace", "King", "Queen", "Jack"].includes(card.name)
