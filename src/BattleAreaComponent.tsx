@@ -52,28 +52,12 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
 
   useEffect(() => {
     if (playedCard) {
-      // When a card is played, we just need to add it to the list.
-      // The sorting will happen in the next step.
-      const orderedCards =
-        currentTurn?.cardsPlayed && currentRound?.turns.at(-1)?.suit
-          ? sortCards(
-              currentTurn?.cardsPlayed,
-              currentRound?.turns.at(-1)?.suit ?? "",
-              trumpSuit?.suit ?? "",
-            )
-          : [];
-      setOrderedCardsInTurn(orderedCards);
+      // Clear the played card after animation delay
       setTimeout(() => {
         onCardPlayed(undefined);
       }, 1000);
     }
-  }, [
-    playedCard,
-    onCardPlayed,
-    currentTurn?.cardsPlayed,
-    currentRound?.turns,
-    trumpSuit?.suit,
-  ]);
+  }, [playedCard, onCardPlayed]);
 
   useEffect(() => {
     const orderedCards = currentTurn?.cardsPlayed.length

@@ -510,6 +510,8 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
             })}
             {readyToChangeCards && (
               <span
+                role="img"
+                aria-label="Select cards to exchange"
                 title="Select cards to exchange"
                 style={{
                   cursor: "help",
