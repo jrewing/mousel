@@ -383,7 +383,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     height="auto"
                     onClick={() => takeTrumpHandler()}
                   >
-                    Take
+                    Take Trump
                   </Button>
                 )}
                 {!canNotTakeTrump && (
