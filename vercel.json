@@ -1,0 +1,9 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "fix-dealer-rotation": false,
+      "fixes/qwerty": false
+    }
+  }
+}
