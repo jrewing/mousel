@@ -49,6 +49,12 @@ const CardComponent: React.FC<CardComponentProps> = ({
   }
 
   const playCardHandler = () => {
+    // If card is selectable, toggle selection instead of playing
+    if (selectable && !isTrumpForSale) {
+      toggleSelected();
+      return;
+    }
+
     if (cardRef.current !== null) {
       const rectRef = (cardRef.current as HTMLElement).getBoundingClientRect();
       onCardPlayed({
@@ -81,28 +87,34 @@ const CardComponent: React.FC<CardComponentProps> = ({
         height={6}
         onClick={!card.isPlayed ? () => playCardHandler() : undefined}
         _disabled={{ opacity: 0.5 }}
-        isDisabled={!isPlayable}
-        color={card.color === "Red" ? "red" : "black"}
-        backgroundColor={"white"}
+        isDisabled={!isPlayable && !(selectable && !isTrumpForSale)}
+        color={
+          card.isSelected ? "white" : card.color === "Red" ? "red" : "black"
+        }
+        backgroundColor={card.isSelected ? "blue.600" : "white"}
         borderColor={card.suit === trumpSuit?.suit ? "yellow.300" : "black"}
         borderWidth={2}
         fontFamily={"Noticia Text"}
         fontSize={16}
         fontWeight={400}
         fontStyle={"italic"}
+        cursor={
+          (selectable && !isTrumpForSale) || isPlayable
+            ? "pointer"
+            : "not-allowed"
+        }
       >
-        {["Ace", "King", "Queen", "Jack"].includes(card.name)
-          ? card.name.charAt(0)
-          : card.name}{" "}
-        <span style={{ fontSize: "1.2em" }}>&nbsp;{card.suitSymbol}</span>
+        {card.isSelected ? (
+          <span style={{ fontSize: "1.2em" }} aria-label="Selected card" role="img">🂠</span>
+        ) : (
+          <>
+            {["Ace", "King", "Queen", "Jack"].includes(card.name)
+              ? card.name.charAt(0)
+              : card.name}{" "}
+            <span style={{ fontSize: "1.2em" }}>&nbsp;{card.suitSymbol}</span>
+          </>
+        )}
       </Button>
-      {!isTrumpForSale && selectable && (
-        <input
-          onChange={() => toggleSelected()}
-          checked={card.isSelected}
-          type="checkbox"
-        />
-      )}
 
       {player?.isDealer && canDiscardCard && (
         <Tooltip label="Discard card" fontSize="md">
