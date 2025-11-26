@@ -352,6 +352,20 @@ const gameSlice = createSlice({
         return;
       }
 
+      // Count selected cards
+      const selectedCards = player.hand.filter((cardId) => {
+        const card = state.deck.find((c) => c.id === cardId);
+        return card?.isSelected;
+      });
+
+      // If player has 5 cards (dealer who took trump early), they must select exactly 1 card
+      if (player.hand.length === 5 && selectedCards.length !== 1) {
+        console.warn(
+          "Dealer with 5 cards must select exactly 1 card to discard",
+        );
+        return;
+      }
+
       const newHand = player.hand.map((cardId) => {
         const playerCard = state.deck.find((c) => c.id === cardId);
         if (playerCard?.isSelected) {
@@ -1179,7 +1193,7 @@ export const selectPlayerWhoShouldExchangeCards = (state: { game: Game }) => {
     const player = state.game.players.find((player) => player.id === index);
     if (
       player?.hasExchangedCards === false &&
-      player.hand.length === 4 &&
+      (player.hand.length === 4 || player.hand.length === 5) &&
       !player.hasFolded &&
       player.isIn
     ) {

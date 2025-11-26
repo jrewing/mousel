@@ -511,8 +511,16 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
             {readyToChangeCards && (
               <span
                 role="img"
-                aria-label="Select cards to exchange"
-                title="Select cards to exchange"
+                aria-label={
+                  player?.hand.length === 5
+                    ? "Select 1 card to discard"
+                    : "Select cards to exchange"
+                }
+                title={
+                  player?.hand.length === 5
+                    ? "Select 1 card to discard"
+                    : "Select cards to exchange"
+                }
                 style={{
                   cursor: "help",
                   fontSize: "1.2rem",
