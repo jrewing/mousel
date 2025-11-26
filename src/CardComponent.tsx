@@ -105,7 +105,7 @@ const CardComponent: React.FC<CardComponentProps> = ({
         }
       >
         {card.isSelected ? (
-          <span style={{ fontSize: "1.2em" }}>🂠</span>
+          <span style={{ fontSize: "1.2em" }} aria-label="Selected card" role="img">🂠</span>
         ) : (
           <>
             {["Ace", "King", "Queen", "Jack"].includes(card.name)
