@@ -24,6 +24,9 @@ import {
   selectPlayerWhoCanFoldOrStay,
   playerIsIn,
   isPlayersTurn,
+  calculateWinner,
+  newTurn,
+  endRound,
 } from "./state/gameSlice";
 import { selectDealer } from "./state/gameSlice";
 import { RootState } from "./state/store";
@@ -35,6 +38,7 @@ import {
   HStack,
   Stack,
   StackDivider,
+  Badge,
 } from "@chakra-ui/react";
 import { PlayedCard } from "./Types";
 
@@ -143,6 +147,14 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
     }
   };
 
+  const newTurnHandler = () => {
+    dispatch(newTurn());
+  };
+
+  const newRoundHandler = () => {
+    dispatch(endRound());
+  };
+
   const readyToDeal =
     ((round?.roundState === "Initial" || round?.roundState === "0Cards") &&
       dealer !== undefined &&
@@ -159,6 +171,18 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
     round?.roundState === "4Cards" &&
     !player?.hasFolded;
   const readyToFold = player?.id === playersTurnToFold?.id;
+
+  // Get the last completed turn to check who won
+  const lastTurn =
+    round?.turns && round.turns.length > 0
+      ? round.turns[round.turns.length - 1]
+      : undefined;
+
+  const showNewTurnButton =
+    round?.roundState === "TurnOver" && lastTurn?.winner === playerId;
+  const showNewRoundButton =
+    (round?.roundState === "RoundOver" || round?.roundState === "GameOver") &&
+    isDealer;
 
   const playersTurn = useSelector((state: RootState) =>
     isPlayersTurn(state, playerId),
@@ -203,86 +227,201 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
       className={playersTurn ? "active-player" : ""}
       key={playerId}
       backgroundColor="green.800"
-      padding={2}
+      padding={1}
+      borderWidth={player?.hasTakenTrump ? 3 : 1}
+      borderColor={player?.hasTakenTrump ? "yellow.400" : "gray.600"}
     >
-      <CardHeader color="gray.200" fontWeight="bold" paddingBottom={0}>
-        <h4>{player?.name}</h4>
+      <CardHeader
+        color="gray.200"
+        fontWeight="bold"
+        paddingBottom={0}
+        paddingTop={1}
+        fontSize="sm"
+      >
+        <HStack justifyContent="space-between">
+          <h4 style={{ fontSize: "0.875rem", margin: 0 }}>{player?.name}</h4>
+          {player?.hasTakenTrump && (
+            <Badge colorScheme="yellow" fontSize="0.6em">
+              Trump Taker
+            </Badge>
+          )}
+        </HStack>
       </CardHeader>
-      <CardBody>
-        <Stack divider={<StackDivider />} spacing="1">
-          <Card p={1} colorScheme="red">
+      <CardBody padding={1}>
+        <Stack divider={<StackDivider />} spacing={0.5}>
+          <Card p={0.5} fontSize="xs" colorScheme="red">
             Bank: {player?.bank}ℳ
           </Card>
-          <Card p={1} colorScheme="blue">
+          <Card p={0.5} fontSize="xs" colorScheme="blue">
             Tricks: {player?.tricks}
+            {player?.hasTakenTrump && player.tricks < 2 && (
+              <span style={{ color: "#FFA500", marginLeft: "8px" }}>
+                (needs 2)
+              </span>
+            )}
+            {!player?.hasTakenTrump &&
+              !player?.hasFolded &&
+              player?.isIn &&
+              player.tricks < 1 && (
+                <span style={{ color: "#FFA500", marginLeft: "8px" }}>
+                  (needs 1)
+                </span>
+              )}
           </Card>
-          <HStack minH={6} justifyContent="center">
+          <HStack minH={4} justifyContent="center">
             {!player?.isAI && (
               <>
                 {isDealer && readyToDeal && (
-                  <Button size="xs" onClick={() => dealCardsHandler()}>
+                  <Button
+                    size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
+                    onClick={() => dealCardsHandler()}
+                  >
                     Deal
                   </Button>
                 )}
 
                 {readyToSetTrump && (
-                  <Button size="xs" onClick={() => setTrumpSuitHandler(false)}>
-                    Set Trump Suit
+                  <Button
+                    size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
+                    onClick={() => setTrumpSuitHandler(false)}
+                  >
+                    Set Trump
                   </Button>
                 )}
                 {readyToSetTrump && (
-                  <Button size="xs" onClick={() => setTrumpSuitHandler(true)}>
-                    Set Trump Suit hidden
+                  <Button
+                    size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
+                    onClick={() => setTrumpSuitHandler(true)}
+                  >
+                    Set Hidden
                   </Button>
                 )}
 
                 {readyToAddWager && (
-                  <Button size="xs" onClick={() => addWagerHandler()}>
-                    Post ante
+                  <Button
+                    size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
+                    onClick={() => addWagerHandler()}
+                  >
+                    Ante
                   </Button>
                 )}
                 {readyToChangeCards && (
-                  <Button size="xs" onClick={() => exchangeCardsHandler()}>
-                    Change cards
+                  <Button
+                    size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
+                    onClick={() => exchangeCardsHandler()}
+                  >
+                    Change
                   </Button>
                 )}
 
                 {readyToFold && (
-                  <Button size="xs" onClick={() => fold()}>
+                  <Button
+                    size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
+                    onClick={() => fold()}
+                  >
                     Fold
                   </Button>
                 )}
                 {readyToFold && (
-                  <Button size="xs" onClick={() => iAmIn()}>
-                    I am in
+                  <Button
+                    size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
+                    onClick={() => iAmIn()}
+                  >
+                    I&apos;m In
                   </Button>
                 )}
 
                 {dealer?.id === undefined && (
                   <Button
                     size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
                     colorScheme="red"
                     onClick={() => setDealerHandler()}
                   >
-                    Set Dealer
+                    Dealer
                   </Button>
                 )}
                 {!canNotTakeTrumpEarly && (
-                  <Button size="xs" onClick={() => takeTrumpEarlyHandler()}>
+                  <Button
+                    size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
+                    onClick={() => takeTrumpEarlyHandler()}
+                  >
                     Take Trump Early
                   </Button>
                 )}
                 {!canNotTakeTrump && (
-                  <Button size="xs" onClick={() => takeTrumpHandler()}>
-                    Take Trump
+                  <Button
+                    size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
+                    onClick={() => takeTrumpHandler()}
+                  >
+                    Take
                   </Button>
                 )}
                 {!canNotTakeTrump && (
-                  <Button size="xs" onClick={() => refuseTrumpHandler()}>
-                    Refuse Trump
+                  <Button
+                    size="xs"
+                    fontSize="2xs"
+                    padding={1}
+                    height="auto"
+                    onClick={() => refuseTrumpHandler()}
+                  >
+                    Refuse
                   </Button>
                 )}
               </>
+            )}
+            {showNewTurnButton && (
+              <Button
+                size="xs"
+                fontSize="2xs"
+                padding={1}
+                height="auto"
+                colorScheme="green"
+                onClick={() => newTurnHandler()}
+              >
+                New Turn
+              </Button>
+            )}
+            {showNewRoundButton && (
+              <Button
+                size="xs"
+                fontSize="2xs"
+                padding={1}
+                height="auto"
+                colorScheme="green"
+                onClick={() => newRoundHandler()}
+              >
+                New Round
+              </Button>
             )}
             {player?.isAI && playersTurn && (
               <span style={{ color: "#90EE90", fontSize: "0.75rem" }}>
@@ -290,7 +429,70 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
               </span>
             )}
           </HStack>
-          <HStack spacing={2}>
+          <HStack justifyContent="center" height="40px">
+            {round?.turns &&
+              round.turns.length > 0 &&
+              round.turns[round.turns.length - 1]?.cardsPlayed
+                .filter((cp) => cp.playerId === playerId)
+                .map((cardPlayed) => {
+                  const playedCard = deck.find(
+                    (c) => c.id === cardPlayed.cardId,
+                  );
+                  const currentTurn = round.turns[round.turns.length - 1];
+                  const winningCard =
+                    trumpSuit &&
+                    currentTurn &&
+                    currentTurn.cardsPlayed.length > 0
+                      ? calculateWinner(trumpSuit.suit, currentTurn, deck)
+                      : undefined;
+                  const isWinning = winningCard?.cardId === playedCard?.id;
+                  const isFirstCard = cardPlayed.sequence === 1;
+                  const isBothFirstAndWinning = isWinning && isFirstCard;
+
+                  return (
+                    playedCard && (
+                      <Card
+                        key={cardPlayed.cardId}
+                        p={1}
+                        fontSize="xs"
+                        backgroundColor="white"
+                        borderWidth={2}
+                        borderColor={
+                          isWinning
+                            ? "yellow.400"
+                            : isFirstCard
+                              ? "purple.400"
+                              : "blue.400"
+                        }
+                        outline={isBothFirstAndWinning ? "3px solid" : "none"}
+                        outlineColor={
+                          isBothFirstAndWinning ? "purple.400" : undefined
+                        }
+                        outlineOffset="-6px"
+                        boxShadow={
+                          isBothFirstAndWinning
+                            ? "0 0 10px 2px rgba(250, 240, 137, 0.8), inset 0 0 8px 1px rgba(159, 122, 234, 0.6)"
+                            : isWinning
+                              ? "0 0 10px 2px rgba(250, 240, 137, 0.8)"
+                              : isFirstCard
+                                ? "0 0 8px 2px rgba(159, 122, 234, 0.6)"
+                                : "none"
+                        }
+                      >
+                        <span
+                          style={{
+                            color: playedCard.color === "Red" ? "red" : "black",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {playedCard.name} {playedCard.suitSymbol}
+                        </span>
+                      </Card>
+                    )
+                  );
+                })}
+          </HStack>
+          <HStack spacing={1} height="30px" alignItems="flex-start">
             {orderedHand.map((cardId, index: number) => {
               const card = deck.find((c) => c.id === cardId);
               return (
@@ -306,6 +508,19 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                 )
               );
             })}
+            {readyToChangeCards && (
+              <span
+                title="Select cards to exchange"
+                style={{
+                  cursor: "help",
+                  fontSize: "1.2rem",
+                  alignSelf: "center",
+                  marginLeft: "4px",
+                }}
+              >
+                👈
+              </span>
+            )}
           </HStack>
         </Stack>
       </CardBody>
