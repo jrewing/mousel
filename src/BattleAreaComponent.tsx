@@ -10,6 +10,7 @@ import {
 import { useSelector } from "react-redux";
 import { Box, VStack, Tag, Card } from "@chakra-ui/react";
 import { PlayedCard, CardInTurn } from "./Types";
+import { TRUMP_SHAKE_DURATION } from "./constants";
 
 type BattleAreaComponentProps = {
   // Add any props you need for your component here
@@ -69,7 +70,7 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
     ) {
       const timer = setTimeout(() => {
         setShowDelayedTrumpCard(true);
-      }, 600); // Wait for deck shake animation to complete
+      }, TRUMP_SHAKE_DURATION); // Wait for deck shake animation to complete
       return () => clearTimeout(timer);
     } else {
       setShowDelayedTrumpCard(false);

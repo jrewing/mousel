@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Card as CardUI } from "@chakra-ui/react";
+import { CARD_DEAL_DELAY, CARD_DEAL_ANIMATION_DURATION } from "./constants";
 
 type AnimatedCard = {
   id: string;
@@ -61,7 +62,7 @@ const DealingAnimationComponent: React.FC<DealingAnimationComponentProps> = ({
         cards.push({
           id: `card-${cardIndex}`,
           playerIndex,
-          delay: cardIndex * 100, // 100ms between each card
+          delay: cardIndex * CARD_DEAL_DELAY,
         });
         cardIndex++;
       }
@@ -71,10 +72,8 @@ const DealingAnimationComponent: React.FC<DealingAnimationComponentProps> = ({
     setAnimatedCards(cards);
 
     // Call onComplete after all animations finish
-    // Last card delay + animation duration (500ms from CSS)
-    const lastCardDelay = (cards.length - 1) * 100;
-    const animationDuration = 500;
-    const totalDuration = lastCardDelay + animationDuration;
+    const totalDuration =
+      (cards.length - 1) * CARD_DEAL_DELAY + CARD_DEAL_ANIMATION_DURATION;
     const timer = setTimeout(() => {
       onCompleteRef.current();
       setAnimatedCards([]);

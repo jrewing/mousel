@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { selectDeck, selectRound } from "./state/gameSlice";
 import { Card } from "@chakra-ui/react";
+import { TRUMP_SHAKE_DURATION } from "./constants";
 
 const DeckComponent: React.FC = () => {
   const deck = useSelector(selectDeck);
@@ -21,7 +22,7 @@ const DeckComponent: React.FC = () => {
 
     if (currentTrumpCard !== undefined && prevTrumpCard === undefined) {
       setIsShaking(true);
-      const timer = setTimeout(() => setIsShaking(false), 600); // Duration matches animation
+      const timer = setTimeout(() => setIsShaking(false), TRUMP_SHAKE_DURATION);
       return () => clearTimeout(timer);
     }
 
