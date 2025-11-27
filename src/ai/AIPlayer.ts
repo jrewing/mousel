@@ -94,25 +94,20 @@ export const selectCardsToDiscard = (
   if (trumpCards.length === 0) {
     // Keep only aces, exchange everything else
     cardsToExchange.push(...sortedOtherCards);
-  }
-  // If we have 1 trump, still be aggressive - exchange up to 3 cards
-  else if (trumpCards.length === 1) {
+  } else if (trumpCards.length === 1) {
+    // If we have 1 trump, still be aggressive - exchange up to 3 cards
     // Keep trump and aces, exchange weak non-face cards
     const cardsToConsider = sortedOtherCards.filter(
       (c) => !["King", "Queen"].includes(c.name),
     );
     cardsToExchange.push(...cardsToConsider.slice(0, 3));
-  }
-  // If we have 2 trumps, exchange medium-weak cards
-  else if (trumpCards.length === 2) {
-    // Exchange cards with value 5-Queen
+  } else if (trumpCards.length === 2) {
+    // If we have 2 trumps, exchange medium-weak cards
     const weakCards = sortedOtherCards.filter((c) => c.value <= 12);
     cardsToExchange.push(...weakCards.slice(0, 2));
-  }
-  // If we have 3+ trumps, only exchange very weak cards
-  else {
-    // Exchange cards with value 5-Queen
-    const veryWeakCards = sortedOtherCards.filter((c) => c.value <= 12);
+  } else {
+    // If we have 3+ trumps, only exchange very weak cards
+    const veryWeakCards = sortedOtherCards.filter((c) => c.value <= 9);
     cardsToExchange.push(...veryWeakCards.slice(0, 1));
   }
 
@@ -132,10 +127,10 @@ export const decideCardToPlay = (
   deck: Card[],
   currentTurn: Turn | undefined,
   trumpSuit: Card | undefined,
-): Card | null => {
+): Card | undefined => {
   const playableCards = getPlayableCards(player, deck, currentTurn, trumpSuit);
 
-  if (playableCards.length === 0) return null;
+  if (playableCards.length === 0) return undefined;
 
   // Simple strategy: play strongest card if winning, weakest if losing
   const isFirstToPlay = !currentTurn || currentTurn.cardsPlayed.length === 0;
@@ -199,19 +194,12 @@ export const decideStayOrFold = (
 
   if (hand.length === 0) return "fold";
 
-  // Calculate hand strength
-  let handStrength = 0;
-  hand.forEach((card) => {
-    handStrength += getCardStrength(card, trumpSuit);
-  });
-
   // Count trump cards
   const trumpCount = hand.filter((c) => c.suit === trumpSuit?.suit).length;
 
   // Count high value cards: Ace=14, King=13
   const aces = hand.filter((c) => c.value === 14).length;
   const kings = hand.filter((c) => c.value === 13).length;
-  const kingOrAce = aces + kings;
 
   // VERY aggressive folding strategy
 
