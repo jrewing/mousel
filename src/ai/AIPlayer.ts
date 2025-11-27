@@ -194,8 +194,11 @@ export const decideStayOrFold = (
 
   if (hand.length === 0) return "fold";
 
+  // If no trump suit set, can't evaluate trump-based strategy
+  if (!trumpSuit) return "fold";
+
   // Count trump cards
-  const trumpCount = hand.filter((c) => c.suit === trumpSuit?.suit).length;
+  const trumpCount = hand.filter((c) => c.suit === trumpSuit.suit).length;
 
   // Count high value cards: Ace=14, King=13
   const aces = hand.filter((c) => c.value === 14).length;
@@ -213,18 +216,20 @@ export const decideStayOrFold = (
 
   // 1 trump = fold most of the time (70%+ fold rate)
   if (trumpCount === 1) {
-    const trumpCard = hand.find((c) => c.suit === trumpSuit?.suit);
-    if (!trumpCard) return "fold";
-
+    const trumpCard = hand.find((c) => c.suit === trumpSuit.suit);
     // Only stay if trump is Ace (14) OR (trump is King (13) AND you have an Ace)
-    if (trumpCard.value < 14 && !(trumpCard.value === 13 && aces >= 1)) {
+    if (
+      trumpCard &&
+      trumpCard.value < 14 &&
+      !(trumpCard.value === 13 && aces >= 1)
+    ) {
       return "fold";
     }
   }
 
   // 2 trumps = fold if both are weak (40% fold rate)
   if (trumpCount === 2) {
-    const trumpCards = hand.filter((c) => c.suit === trumpSuit?.suit);
+    const trumpCards = hand.filter((c) => c.suit === trumpSuit.suit);
     const trumpValues = trumpCards.map((c) => c.value);
     const maxTrumpValue = Math.max(...trumpValues);
     const minTrumpValue = Math.min(...trumpValues);
@@ -237,7 +242,7 @@ export const decideStayOrFold = (
 
   // 3+ trumps = usually stay, fold only if all are very weak
   if (trumpCount >= 3) {
-    const trumpCards = hand.filter((c) => c.suit === trumpSuit?.suit);
+    const trumpCards = hand.filter((c) => c.suit === trumpSuit.suit);
     const maxTrumpValue = Math.max(...trumpCards.map((c) => c.value));
     // Fold if best trump is 7 or worse - all trumps are 5, 6, or 7
     if (maxTrumpValue <= 7) {
