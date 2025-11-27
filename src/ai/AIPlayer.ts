@@ -94,25 +94,20 @@ export const selectCardsToDiscard = (
   if (trumpCards.length === 0) {
     // Keep only aces, exchange everything else
     cardsToExchange.push(...sortedOtherCards);
-  }
-  // If we have 1 trump, still be aggressive - exchange up to 3 cards
-  else if (trumpCards.length === 1) {
+  } else if (trumpCards.length === 1) {
+    // If we have 1 trump, still be aggressive - exchange up to 3 cards
     // Keep trump and aces, exchange weak non-face cards
     const cardsToConsider = sortedOtherCards.filter(
       (c) => !["King", "Queen"].includes(c.name),
     );
     cardsToExchange.push(...cardsToConsider.slice(0, 3));
-  }
-  // If we have 2 trumps, exchange medium-weak cards
-  else if (trumpCards.length === 2) {
-    // Exchange cards with value 5-Queen
+  } else if (trumpCards.length === 2) {
+    // If we have 2 trumps, exchange medium-weak cards
     const weakCards = sortedOtherCards.filter((c) => c.value <= 12);
     cardsToExchange.push(...weakCards.slice(0, 2));
-  }
-  // If we have 3+ trumps, only exchange very weak cards
-  else {
-    // Exchange cards with value 5-Queen
-    const veryWeakCards = sortedOtherCards.filter((c) => c.value <= 12);
+  } else {
+    // If we have 3+ trumps, only exchange very weak cards
+    const veryWeakCards = sortedOtherCards.filter((c) => c.value <= 11);
     cardsToExchange.push(...veryWeakCards.slice(0, 1));
   }
 
@@ -132,10 +127,10 @@ export const decideCardToPlay = (
   deck: Card[],
   currentTurn: Turn | undefined,
   trumpSuit: Card | undefined,
-): Card | null => {
+): Card | undefined => {
   const playableCards = getPlayableCards(player, deck, currentTurn, trumpSuit);
 
-  if (playableCards.length === 0) return null;
+  if (playableCards.length === 0) return undefined;
 
   // Simple strategy: play strongest card if winning, weakest if losing
   const isFirstToPlay = !currentTurn || currentTurn.cardsPlayed.length === 0;
@@ -199,16 +194,67 @@ export const decideStayOrFold = (
 
   if (hand.length === 0) return "fold";
 
-  // Calculate hand strength
-  let handStrength = 0;
-  hand.forEach((card) => {
-    handStrength += getCardStrength(card, trumpSuit);
-  });
+  // If no trump suit set, can't evaluate trump-based strategy
+  if (!trumpSuit) return "fold";
 
-  const avgStrength = handStrength / hand.length;
+  // Count trump cards
+  const trumpCount = hand.filter((c) => c.suit === trumpSuit.suit).length;
 
-  // Stay if average strength is decent
-  return avgStrength > 8 ? "stay" : "fold";
+  // Count high value cards: Ace=14, King=13
+  const aces = hand.filter((c) => c.value === 14).length;
+  const kings = hand.filter((c) => c.value === 13).length;
+
+  // Folding strategy fold rates:
+  //   0 trumps: ~90% fold rate
+  //   1 trump: ~70% fold rate
+  //   2 trumps: ~40% fold rate
+  //   3+ trumps: ~10% fold rate
+
+  // 0 trumps = almost always fold (90%+ fold rate)
+  if (trumpCount === 0) {
+    // Only stay if you have 2+ Aces OR (1 Ace + 2 Kings)
+    if (aces < 2 && !(aces === 1 && kings >= 2)) {
+      return "fold";
+    }
+  }
+
+  // 1 trump = fold most of the time (70%+ fold rate)
+  if (trumpCount === 1) {
+    const trumpCard = hand.find((c) => c.suit === trumpSuit.suit);
+    // Only stay if trump is Ace (14) OR (trump is King (13) AND you have an Ace)
+    if (
+      trumpCard &&
+      trumpCard.value < 14 &&
+      !(trumpCard.value === 13 && aces >= 1)
+    ) {
+      return "fold";
+    }
+  }
+
+  // 2 trumps = fold if both are weak (40% fold rate)
+  if (trumpCount === 2) {
+    const trumpCards = hand.filter((c) => c.suit === trumpSuit.suit);
+    const trumpValues = trumpCards.map((c) => c.value);
+    const maxTrumpValue = Math.max(...trumpValues);
+    const minTrumpValue = Math.min(...trumpValues);
+
+    // Fold if best trump is Jack (11) or worse OR (best trump is Queen (12) AND other trump is 8 or worse)
+    if (maxTrumpValue <= 11 || (maxTrumpValue === 12 && minTrumpValue <= 8)) {
+      return "fold";
+    }
+  }
+
+  // 3+ trumps = usually stay, fold only if all are very weak
+  if (trumpCount >= 3) {
+    const trumpCards = hand.filter((c) => c.suit === trumpSuit.suit);
+    const maxTrumpValue = Math.max(...trumpCards.map((c) => c.value));
+    // Fold if best trump is 7 or worse - all trumps are 5, 6, or 7
+    if (maxTrumpValue <= 7) {
+      return "fold";
+    }
+  }
+
+  return "stay";
 };
 
 /**

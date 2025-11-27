@@ -45,11 +45,15 @@ import { PlayedCard } from "./Types";
 type PlayerComponentProps = {
   playerId: number;
   onCardPlayed: (playedCard: PlayedCard) => void;
+  isDealing?: boolean;
+  cardsToShow?: number;
 };
 
 const PlayerComponent: React.FC<PlayerComponentProps> = ({
   playerId,
   onCardPlayed,
+  isDealing = false,
+  cardsToShow = 0,
 }) => {
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) =>
@@ -430,7 +434,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                 colorScheme="green"
                 onClick={() => newRoundHandler()}
               >
-                New Round
+                {round?.roundState === "GameOver" ? "New Game" : "New Round"}
               </Button>
             )}
             {player?.isAI && playersTurn && (
@@ -439,8 +443,21 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
               </span>
             )}
           </HStack>
-          <HStack justifyContent="center" height="40px">
-            {round?.turns &&
+          <HStack justifyContent="center" height="40px" alignItems="center">
+            {readyToChangeCards ? (
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#90EE90",
+                  textAlign: "center",
+                }}
+              >
+                {player?.hand.length === 5
+                  ? "Select cards to exchange, then discard to 4 cards"
+                  : "Select cards you wish to exchange"}
+              </div>
+            ) : (
+              round?.turns &&
               round.turns.length > 0 &&
               round.turns[round.turns.length - 1]?.cardsPlayed
                 .filter((cp) => cp.playerId === playerId)
@@ -500,28 +517,20 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                       </Card>
                     )
                   );
-                })}
+                })
+            )}
           </HStack>
-          {readyToChangeCards && (
-            <div
-              style={{
-                fontSize: "0.75rem",
-                color: "#90EE90",
-                textAlign: "center",
-              }}
-            >
-              {player?.hand.length === 5
-                ? "Select cards to exchange, then discard to 4 cards"
-                : "Select cards you wish to exchange"}
-            </div>
-          )}
           <HStack spacing={1} height="30px" alignItems="flex-start">
             {orderedHand.map((cardId, index: number) => {
               const card = deck.find((c) => c.id === cardId);
+              // Show cards if not dealing, or if dealing and within cardsToShow limit
+              const shouldShow =
+                !isDealing || (cardsToShow > 0 && index < cardsToShow);
               return (
                 card &&
                 !card.isDiscarded &&
-                !card.isPlayed && (
+                !card.isPlayed &&
+                shouldShow && (
                   <CardComponent
                     onCardPlayed={onCardPlayed}
                     key={index}

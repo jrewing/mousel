@@ -10,6 +10,7 @@ import {
 import { useSelector } from "react-redux";
 import { Box, VStack, Tag, Card } from "@chakra-ui/react";
 import { PlayedCard, CardInTurn } from "./Types";
+import { TRUMP_SHAKE_DURATION } from "./constants";
 
 type BattleAreaComponentProps = {
   // Add any props you need for your component here
@@ -32,6 +33,7 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
   const [orderedCardsOnTable, setOrderedCardsInTurn] = useState<CardInTurn[]>(
     [],
   );
+  const [showDelayedTrumpCard, setShowDelayedTrumpCard] = useState(false);
 
   const cardLookup = useMemo(() => {
     const lookup: Record<string, (typeof game.deck)[0]> = {};
@@ -58,6 +60,22 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
       }, 1000);
     }
   }, [playedCard, onCardPlayed]);
+
+  // Delay trump card reveal to match deck shake animation
+  useEffect(() => {
+    if (
+      trumpSuit &&
+      currentRound?.roundState === "2Cards" &&
+      !currentRound?.hiddenTrumpSuit
+    ) {
+      const timer = setTimeout(() => {
+        setShowDelayedTrumpCard(true);
+      }, TRUMP_SHAKE_DURATION); // Wait for deck shake animation to complete
+      return () => clearTimeout(timer);
+    } else {
+      setShowDelayedTrumpCard(false);
+    }
+  }, [trumpSuit, currentRound?.roundState, currentRound?.hiddenTrumpSuit]);
 
   useEffect(() => {
     const orderedCards = currentTurn?.cardsPlayed.length
@@ -108,14 +126,9 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
     return copy;
   }
 
-  const showTrumpCard =
-    trumpSuit &&
-    currentRound?.roundState === "2Cards" &&
-    !currentRound?.hiddenTrumpSuit;
-
   return (
     <Box id="battleArea">
-      {showTrumpCard && (
+      {showDelayedTrumpCard && trumpSuit && (
         <Card
           position="absolute"
           top="50%"
