@@ -5,6 +5,10 @@
   --scaling-factor: 1.3;
   --small-square-start: 14.64%;
   --small-square-end: calc(100% - var(--small-square-start));
+
+  /* Animation timing - must match constants.ts values */
+  --trump-shake-duration: 0.6s;
+  --card-deal-animation-duration: 0.5s;
 }
 
 ul {
@@ -240,23 +244,23 @@ ul {
 }
 
 .dealing-animation-0 {
-  animation: deal-card-0 0.5s ease-out;
+  animation: deal-card-0 var(--card-deal-animation-duration) ease-out;
 }
 
 .dealing-animation-1 {
-  animation: deal-card-1 0.5s ease-out;
+  animation: deal-card-1 var(--card-deal-animation-duration) ease-out;
 }
 
 .dealing-animation-2 {
-  animation: deal-card-2 0.5s ease-out;
+  animation: deal-card-2 var(--card-deal-animation-duration) ease-out;
 }
 
 .dealing-animation-3 {
-  animation: deal-card-3 0.5s ease-out;
+  animation: deal-card-3 var(--card-deal-animation-duration) ease-out;
 }
 
 .dealing-animation-4 {
-  animation: deal-card-4 0.5s ease-out;
+  animation: deal-card-4 var(--card-deal-animation-duration) ease-out;
 }
 
 /* Dealing animation container */
@@ -308,5 +312,5 @@ ul {
 }
 
 .trump-shake {
-  animation: trump-shake 0.6s ease-in-out;
+  animation: trump-shake var(--trump-shake-duration) ease-in-out;
 }
