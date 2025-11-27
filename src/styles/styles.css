@@ -286,21 +286,6 @@ ul {
   grid-row: 1;
 }
 
-/* Stack all animated cards in the same grid cell */
-.animated-dealing-card:nth-child(1),
-.animated-dealing-card:nth-child(2),
-.animated-dealing-card:nth-child(3),
-.animated-dealing-card:nth-child(4),
-.animated-dealing-card:nth-child(5),
-.animated-dealing-card:nth-child(6),
-.animated-dealing-card:nth-child(7),
-.animated-dealing-card:nth-child(8),
-.animated-dealing-card:nth-child(9),
-.animated-dealing-card:nth-child(10) {
-  grid-column: 1;
-  grid-row: 1;
-}
-
 /* Trump card shake animation */
 @keyframes trump-shake {
   0%,
