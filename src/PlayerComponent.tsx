@@ -277,6 +277,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     fontSize="2xs"
                     padding={1}
                     height="auto"
+                    colorScheme="blue"
                     onClick={() => dealCardsHandler()}
                   >
                     Deal
@@ -289,6 +290,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     fontSize="2xs"
                     padding={1}
                     height="auto"
+                    colorScheme="blue"
                     onClick={() => setTrumpSuitHandler(false)}
                   >
                     Set Trump Suit
@@ -300,6 +302,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     fontSize="2xs"
                     padding={1}
                     height="auto"
+                    colorScheme="purple"
                     onClick={() => setTrumpSuitHandler(true)}
                   >
                     Set Hidden
@@ -312,6 +315,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     fontSize="2xs"
                     padding={1}
                     height="auto"
+                    colorScheme="blue"
                     onClick={() => addWagerHandler()}
                   >
                     Post Ante
@@ -323,6 +327,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     fontSize="2xs"
                     padding={1}
                     height="auto"
+                    colorScheme="blue"
                     onClick={() => exchangeCardsHandler()}
                   >
                     Change
@@ -335,6 +340,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     fontSize="2xs"
                     padding={1}
                     height="auto"
+                    colorScheme="orange"
                     onClick={() => fold()}
                   >
                     Fold
@@ -346,6 +352,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     fontSize="2xs"
                     padding={1}
                     height="auto"
+                    colorScheme="blue"
                     onClick={() => iAmIn()}
                   >
                     I&apos;m In
@@ -370,6 +377,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     fontSize="2xs"
                     padding={1}
                     height="auto"
+                    colorScheme="yellow"
                     onClick={() => takeTrumpEarlyHandler()}
                   >
                     Take Trump Early
@@ -381,6 +389,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     fontSize="2xs"
                     padding={1}
                     height="auto"
+                    colorScheme="yellow"
                     onClick={() => takeTrumpHandler()}
                   >
                     Take Trump
@@ -392,6 +401,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                     fontSize="2xs"
                     padding={1}
                     height="auto"
+                    colorScheme="gray"
                     onClick={() => refuseTrumpHandler()}
                   >
                     Refuse
