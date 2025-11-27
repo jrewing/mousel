@@ -32,6 +32,7 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
   const [orderedCardsOnTable, setOrderedCardsInTurn] = useState<CardInTurn[]>(
     [],
   );
+  const [showDelayedTrumpCard, setShowDelayedTrumpCard] = useState(false);
 
   const cardLookup = useMemo(() => {
     const lookup: Record<string, (typeof game.deck)[0]> = {};
@@ -58,6 +59,22 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
       }, 1000);
     }
   }, [playedCard, onCardPlayed]);
+
+  // Delay trump card reveal to match deck shake animation
+  useEffect(() => {
+    if (
+      trumpSuit &&
+      currentRound?.roundState === "2Cards" &&
+      !currentRound?.hiddenTrumpSuit
+    ) {
+      const timer = setTimeout(() => {
+        setShowDelayedTrumpCard(true);
+      }, 600); // Wait for deck shake animation to complete
+      return () => clearTimeout(timer);
+    } else {
+      setShowDelayedTrumpCard(false);
+    }
+  }, [trumpSuit, currentRound?.roundState, currentRound?.hiddenTrumpSuit]);
 
   useEffect(() => {
     const orderedCards = currentTurn?.cardsPlayed.length
@@ -108,14 +125,9 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
     return copy;
   }
 
-  const showTrumpCard =
-    trumpSuit &&
-    currentRound?.roundState === "2Cards" &&
-    !currentRound?.hiddenTrumpSuit;
-
   return (
     <Box id="battleArea">
-      {showTrumpCard && (
+      {showDelayedTrumpCard && trumpSuit && (
         <Card
           position="absolute"
           top="50%"

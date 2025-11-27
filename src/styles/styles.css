@@ -96,3 +96,232 @@ ul {
   border: 3px solid rgb(118, 200, 55);
   animation: pulse 1.5s infinite;
 }
+
+/* Deck Styling */
+.deck-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.deck-stack {
+  position: relative;
+  width: 50px;
+  height: 70px;
+}
+
+.deck-card {
+  position: absolute;
+  width: 50px;
+  height: 70px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.deck-card-bottom {
+  top: 0;
+  left: 0;
+}
+
+.deck-card-middle {
+  top: 0;
+  left: 0;
+  transform: translate(2.5px, -61px);
+}
+
+.deck-card-top {
+  top: 0;
+  left: 0;
+  transform: translate(5px, -120px);
+}
+
+.deck-card-trump {
+  top: 0;
+  left: 0;
+  transform: translate(5px, -120px);
+  z-index: 10;
+}
+
+.card-back {
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.deck-count {
+  margin-top: 8px;
+  font-size: 10px;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+/* Card dealing animation */
+@keyframes deal-card-0 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, calc(var(--half-container-size) * -1)) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes deal-card-1 {
+  0% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+        calc(var(--half-container-size) * 0.951),
+        calc(var(--half-container-size) * -0.309)
+      )
+      scale(0.8) rotate(72deg);
+    opacity: 0;
+  }
+}
+
+@keyframes deal-card-2 {
+  0% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+        calc(var(--half-container-size) * 0.588),
+        calc(var(--half-container-size) * 0.809)
+      )
+      scale(0.8) rotate(144deg);
+    opacity: 0;
+  }
+}
+
+@keyframes deal-card-3 {
+  0% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+        calc(var(--half-container-size) * -0.588),
+        calc(var(--half-container-size) * 0.809)
+      )
+      scale(0.8) rotate(216deg);
+    opacity: 0;
+  }
+}
+
+@keyframes deal-card-4 {
+  0% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+        calc(var(--half-container-size) * -0.951),
+        calc(var(--half-container-size) * -0.309)
+      )
+      scale(0.8) rotate(288deg);
+    opacity: 0;
+  }
+}
+
+.dealing-animation-0 {
+  animation: deal-card-0 0.5s ease-out;
+}
+
+.dealing-animation-1 {
+  animation: deal-card-1 0.5s ease-out;
+}
+
+.dealing-animation-2 {
+  animation: deal-card-2 0.5s ease-out;
+}
+
+.dealing-animation-3 {
+  animation: deal-card-3 0.5s ease-out;
+}
+
+.dealing-animation-4 {
+  animation: deal-card-4 0.5s ease-out;
+}
+
+/* Dealing animation container */
+.dealing-animation-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.animated-dealing-card {
+  width: 50px;
+  height: 70px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  animation-fill-mode: forwards;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* Stack all animated cards in the same grid cell */
+.animated-dealing-card:nth-child(1),
+.animated-dealing-card:nth-child(2),
+.animated-dealing-card:nth-child(3),
+.animated-dealing-card:nth-child(4),
+.animated-dealing-card:nth-child(5),
+.animated-dealing-card:nth-child(6),
+.animated-dealing-card:nth-child(7),
+.animated-dealing-card:nth-child(8),
+.animated-dealing-card:nth-child(9),
+.animated-dealing-card:nth-child(10) {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* Trump card shake animation */
+@keyframes trump-shake {
+  0%,
+  100% {
+    transform: translate(5px, -120px) rotate(0deg);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translate(3px, -120px) rotate(-2deg);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translate(7px, -120px) rotate(2deg);
+  }
+}
+
+.trump-shake {
+  animation: trump-shake 0.6s ease-in-out;
+}

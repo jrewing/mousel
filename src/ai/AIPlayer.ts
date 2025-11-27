@@ -205,10 +205,59 @@ export const decideStayOrFold = (
     handStrength += getCardStrength(card, trumpSuit);
   });
 
-  const avgStrength = handStrength / hand.length;
+  // Count trump cards
+  const trumpCount = hand.filter((c) => c.suit === trumpSuit?.suit).length;
 
-  // Stay if average strength is decent
-  return avgStrength > 8 ? "stay" : "fold";
+  // Count high value cards: Jack=6, Queen=7, King=8, Ace=9
+  const aces = hand.filter((c) => c.value === 9).length;
+  const kings = hand.filter((c) => c.value === 8).length;
+  const kingOrAce = aces + kings;
+
+  // VERY aggressive folding strategy
+
+  // 0 trumps = almost always fold (90%+ fold rate)
+  if (trumpCount === 0) {
+    // Only stay if you have 2+ Aces OR (1 Ace + 2 Kings)
+    if (aces < 2 && !(aces === 1 && kings >= 2)) {
+      return "fold";
+    }
+  }
+
+  // 1 trump = fold most of the time (70%+ fold rate)
+  if (trumpCount === 1) {
+    const trumpCard = hand.find((c) => c.suit === trumpSuit?.suit);
+    if (!trumpCard) return "fold";
+
+    // Only stay if trump is Ace OR (trump is King AND you have an Ace)
+    if (trumpCard.value < 9 && !(trumpCard.value === 8 && aces >= 1)) {
+      return "fold";
+    }
+  }
+
+  // 2 trumps = fold if both are weak (40% fold rate)
+  if (trumpCount === 2) {
+    const trumpCards = hand.filter((c) => c.suit === trumpSuit?.suit);
+    const trumpValues = trumpCards.map((c) => c.value);
+    const maxTrumpValue = Math.max(...trumpValues);
+    const minTrumpValue = Math.min(...trumpValues);
+
+    // Fold if best trump is Jack or worse (≤6) OR both trumps are 10 or worse (≤5)
+    if (maxTrumpValue <= 6 || (maxTrumpValue <= 7 && minTrumpValue <= 3)) {
+      return "fold";
+    }
+  }
+
+  // 3+ trumps = usually stay, fold only if all are very weak
+  if (trumpCount >= 3) {
+    const trumpCards = hand.filter((c) => c.suit === trumpSuit?.suit);
+    const maxTrumpValue = Math.max(...trumpCards.map((c) => c.value));
+    // Fold if best trump is 7 or worse (5,6,7) - all trumps are garbage
+    if (maxTrumpValue <= 2) {
+      return "fold";
+    }
+  }
+
+  return "stay";
 };
 
 /**
