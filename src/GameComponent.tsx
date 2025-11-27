@@ -64,7 +64,7 @@ const GameComponent: React.FC<GameComponentProps> = () => {
     setCardsToShow(0); // Reset cards to show all
   };
 
-  //Parameter is a ref from useRef
+  // Handles card play events from PlayerComponent
   function onCardPlayed(playedCard: PlayedCard | undefined) {
     if (playedCard !== undefined) {
       setPlayedCard(playedCard);
