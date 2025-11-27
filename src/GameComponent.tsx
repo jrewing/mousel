@@ -61,7 +61,7 @@ const GameComponent: React.FC<GameComponentProps> = () => {
   const handleDealingComplete = () => {
     console.log("Dealing animation complete - showing all cards");
     setIsDealing(false);
-    setCardsToShow(0); // Reset cards to show all
+    setCardsToShow(0); // Reset cardsToShow state (all cards visible due to isDealing=false)
   };
 
   // Handles card play events from PlayerComponent
