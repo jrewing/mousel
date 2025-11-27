@@ -14,6 +14,20 @@ type DealingAnimationComponentProps = {
   onComplete: () => void;
 };
 
+/**
+ * DealingAnimationComponent animates cards flying from the deck to each player.
+ *
+ * - Creates one animated card per player per round, for a total of `numberOfPlayers * cardsPerPlayer` cards.
+ * - Each card's animation is staggered by 100ms (`delay`), so cards are dealt sequentially.
+ * - The animation duration for each card is 500ms (handled via CSS).
+ * - Calls `onComplete` after all animations have finished (last card's delay + animation duration).
+ *
+ * Props:
+ * - isDealing: Whether to show the dealing animation.
+ * - numberOfPlayers: Number of players to deal cards to.
+ * - cardsPerPlayer: Number of cards each player receives.
+ * - onComplete: Callback invoked after all animations finish.
+ */
 const DealingAnimationComponent: React.FC<DealingAnimationComponentProps> = ({
   isDealing,
   numberOfPlayers,
