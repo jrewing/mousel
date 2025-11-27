@@ -57,7 +57,7 @@ const DeckComponent: React.FC = () => {
           <div className="card-back">🂠</div>
         </Card>
       </div>
-      <div className="deck-count">{cardsInDeck} cards</div>
+      <div className="deck-count">{cardsInDeck} card{cardsInDeck === 1 ? '' : 's'}</div>
     </div>
   );
 };
