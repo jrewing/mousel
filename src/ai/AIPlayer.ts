@@ -107,7 +107,7 @@ export const selectCardsToDiscard = (
     cardsToExchange.push(...weakCards.slice(0, 2));
   } else {
     // If we have 3+ trumps, only exchange very weak cards
-    const veryWeakCards = sortedOtherCards.filter((c) => c.value <= 9);
+    const veryWeakCards = sortedOtherCards.filter((c) => c.value <= 11);
     cardsToExchange.push(...veryWeakCards.slice(0, 1));
   }
 
