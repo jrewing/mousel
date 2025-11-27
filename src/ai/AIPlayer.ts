@@ -204,7 +204,11 @@ export const decideStayOrFold = (
   const aces = hand.filter((c) => c.value === 14).length;
   const kings = hand.filter((c) => c.value === 13).length;
 
-  // VERY aggressive folding strategy
+  // Folding strategy fold rates:
+  //   0 trumps: ~90% fold rate
+  //   1 trump: ~70% fold rate
+  //   2 trumps: ~40% fold rate
+  //   3+ trumps: ~10% fold rate
 
   // 0 trumps = almost always fold (90%+ fold rate)
   if (trumpCount === 0) {
