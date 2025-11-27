@@ -208,9 +208,9 @@ export const decideStayOrFold = (
   // Count trump cards
   const trumpCount = hand.filter((c) => c.suit === trumpSuit?.suit).length;
 
-  // Count high value cards: Jack=6, Queen=7, King=8, Ace=9
-  const aces = hand.filter((c) => c.value === 9).length;
-  const kings = hand.filter((c) => c.value === 8).length;
+  // Count high value cards: Ace=14, King=13
+  const aces = hand.filter((c) => c.value === 14).length;
+  const kings = hand.filter((c) => c.value === 13).length;
   const kingOrAce = aces + kings;
 
   // VERY aggressive folding strategy
@@ -228,8 +228,8 @@ export const decideStayOrFold = (
     const trumpCard = hand.find((c) => c.suit === trumpSuit?.suit);
     if (!trumpCard) return "fold";
 
-    // Only stay if trump is Ace OR (trump is King AND you have an Ace)
-    if (trumpCard.value < 9 && !(trumpCard.value === 8 && aces >= 1)) {
+    // Only stay if trump is Ace (14) OR (trump is King (13) AND you have an Ace)
+    if (trumpCard.value < 14 && !(trumpCard.value === 13 && aces >= 1)) {
       return "fold";
     }
   }
@@ -241,8 +241,8 @@ export const decideStayOrFold = (
     const maxTrumpValue = Math.max(...trumpValues);
     const minTrumpValue = Math.min(...trumpValues);
 
-    // Fold if best trump is Jack or worse (≤6) OR both trumps are 10 or worse (≤5)
-    if (maxTrumpValue <= 6 || (maxTrumpValue <= 7 && minTrumpValue <= 3)) {
+    // Fold if best trump is Jack (11) or worse OR (best trump is Queen (12) AND other trump is 8 or worse)
+    if (maxTrumpValue <= 11 || (maxTrumpValue === 12 && minTrumpValue <= 8)) {
       return "fold";
     }
   }
@@ -251,8 +251,8 @@ export const decideStayOrFold = (
   if (trumpCount >= 3) {
     const trumpCards = hand.filter((c) => c.suit === trumpSuit?.suit);
     const maxTrumpValue = Math.max(...trumpCards.map((c) => c.value));
-    // Fold if best trump is 7 or worse (5,6,7) - all trumps are garbage
-    if (maxTrumpValue <= 2) {
+    // Fold if best trump is 7 or worse - all trumps are 5, 6, or 7
+    if (maxTrumpValue <= 7) {
       return "fold";
     }
   }
