@@ -526,7 +526,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
               // Show cards if not dealing, or if dealing and within cardsToShow limit
               const shouldShow =
                 !isDealing ||
-                (isDealing && cardsToShow > 0 && index < cardsToShow);
+                (cardsToShow > 0 && index < cardsToShow);
               return (
                 card &&
                 !card.isDiscarded &&
