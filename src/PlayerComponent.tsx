@@ -475,6 +475,7 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                   const isWinning = winningCard?.cardId === playedCard?.id;
                   const isFirstCard = cardPlayed.sequence === 1;
                   const isBothFirstAndWinning = isWinning && isFirstCard;
+                  const isTrumpCard = playedCard?.suit === trumpSuit?.suit;
 
                   return (
                     playedCard && (
@@ -487,9 +488,11 @@ const PlayerComponent: React.FC<PlayerComponentProps> = ({
                         borderColor={
                           isWinning
                             ? "yellow.400"
-                            : isFirstCard
+                            : isTrumpCard
                               ? "purple.400"
-                              : "blue.400"
+                              : isFirstCard
+                                ? "purple.400"
+                                : "blue.400"
                         }
                         outline={isBothFirstAndWinning ? "3px solid" : "none"}
                         outlineColor={

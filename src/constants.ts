@@ -10,7 +10,10 @@
 export const TRUMP_SHAKE_DURATION = 600;
 
 // Delay between dealing each card in milliseconds
-export const CARD_DEAL_DELAY = 100;
+export const CARD_DEAL_DELAY = 500;
 
 // Duration of a single card dealing animation in milliseconds
-export const CARD_DEAL_ANIMATION_DURATION = 500;
+export const CARD_DEAL_ANIMATION_DURATION = 1000;
+
+// Duration to display the trump card reveal overlay in milliseconds
+export const TRUMP_CARD_DISPLAY_DURATION = 2000;

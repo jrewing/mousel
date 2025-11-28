@@ -100,7 +100,7 @@ const CardComponent: React.FC<CardComponentProps> = ({
           card.isSelected ? "white" : card.color === "Red" ? "red" : "black"
         }
         backgroundColor={card.isSelected ? "blue.600" : "white"}
-        borderColor={card.suit === trumpSuit?.suit ? "yellow.300" : "black"}
+        borderColor={card.suit === trumpSuit?.suit ? "purple.400" : "black"}
         borderWidth={2}
         fontFamily={"Noticia Text"}
         fontSize={16}
