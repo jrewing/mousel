@@ -8,7 +8,7 @@
 
   /* Animation timing - must match constants.ts values */
   --trump-shake-duration: 0.6s;
-  --card-deal-animation-duration: 0.5s;
+  --card-deal-animation-duration: 1s;
 }
 
 ul {
@@ -291,18 +291,20 @@ ul {
   50%,
   70%,
   90% {
-    transform: translate(calc(var(--shake-x) - 2px), var(--shake-y))
-      rotate(-2deg);
+    transform: translate(calc(var(--shake-x) - 5px), var(--shake-y))
+      rotate(-5deg);
   }
   20%,
   40%,
   60%,
   80% {
-    transform: translate(calc(var(--shake-x) + 2px), var(--shake-y))
-      rotate(2deg);
+    transform: translate(calc(var(--shake-x) + 5px), var(--shake-y))
+      rotate(5deg);
   }
 }
 
 .trump-shake {
   animation: trump-shake var(--trump-shake-duration) ease-in-out;
+  box-shadow: 0 0 20px 8px rgba(255, 215, 0, 0.8);
+  z-index: 9999 !important;
 }

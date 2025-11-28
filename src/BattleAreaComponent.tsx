@@ -68,10 +68,18 @@ const BattleAreaComponent: React.FC<BattleAreaComponentProps> = ({
       currentRound?.roundState === "2Cards" &&
       !currentRound?.hiddenTrumpSuit
     ) {
-      const timer = setTimeout(() => {
+      const showTimer = setTimeout(() => {
         setShowDelayedTrumpCard(true);
       }, TRUMP_SHAKE_DURATION); // Wait for deck shake animation to complete
-      return () => clearTimeout(timer);
+
+      const hideTimer = setTimeout(() => {
+        setShowDelayedTrumpCard(false);
+      }, 2600); // Hide after 2s display (600ms shake + 2000ms display)
+
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(hideTimer);
+      };
     } else {
       setShowDelayedTrumpCard(false);
     }
