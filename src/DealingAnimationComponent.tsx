@@ -12,6 +12,7 @@ type DealingAnimationComponentProps = {
   isDealing: boolean;
   numberOfPlayers: number;
   cardsPerPlayer: number;
+  deckCount: number;
   onComplete: () => void;
 };
 
@@ -33,6 +34,7 @@ const DealingAnimationComponent: React.FC<DealingAnimationComponentProps> = ({
   isDealing,
   numberOfPlayers,
   cardsPerPlayer,
+  deckCount,
   onComplete,
 }) => {
   const [animatedCards, setAnimatedCards] = useState<AnimatedCard[]>([]);
@@ -86,6 +88,11 @@ const DealingAnimationComponent: React.FC<DealingAnimationComponentProps> = ({
     return null;
   }
 
+  // Calculate the top card position (matching DeckComponent logic)
+  const topCardIndex = Math.min(deckCount, 10) - 1;
+  const startX = topCardIndex * 0.5;
+  const startY = -topCardIndex * 4;
+
   return (
     <div className="dealing-animation-container">
       {animatedCards.map((card) => (
@@ -95,6 +102,9 @@ const DealingAnimationComponent: React.FC<DealingAnimationComponentProps> = ({
           backgroundColor="blue.500"
           style={{
             animationDelay: `${card.delay}ms`,
+            // @ts-expect-error - CSS custom properties
+            "--start-x": `${startX}px`,
+            "--start-y": `${startY}px`,
           }}
         >
           <div className="card-back">🂠</div>

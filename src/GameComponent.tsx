@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import PlayerComponent from "./PlayerComponent";
 import DeckComponent from "./DeckComponent";
-import DealingAnimationComponent from "./DealingAnimationComponent";
 import { selectGame, selectRound } from "./state/gameSlice";
 import { useSelector } from "react-redux";
 import BattleAreaComponent from "./BattleAreaComponent";
@@ -60,8 +59,13 @@ const GameComponent: React.FC<GameComponentProps> = () => {
 
   const handleDealingComplete = () => {
     console.log("Dealing animation complete - showing all cards");
+    console.log(
+      "Game state players:",
+      game.players.map((p) => ({ id: p.id, hand: p.hand })),
+    );
     setIsDealing(false);
     setCardsToShow(0); // Reset cardsToShow state (all cards visible due to isDealing=false)
+    setCardsToDeal(0); // Reset cardsToDeal
   };
 
   // Handles card play events from PlayerComponent
@@ -76,11 +80,10 @@ const GameComponent: React.FC<GameComponentProps> = () => {
   return (
     <div>
       <div className="game-container">
-        <DeckComponent />
-        <DealingAnimationComponent
+        <DeckComponent
           isDealing={isDealing}
           numberOfPlayers={game.numberOfPlayers}
-          cardsPerPlayer={cardsToDeal}
+          cardsToDeal={cardsToDeal}
           onComplete={handleDealingComplete}
         />
         <div className="player-container">

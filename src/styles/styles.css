@@ -118,10 +118,12 @@ ul {
   position: relative;
   width: 50px;
   height: 70px;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
 }
 
 .deck-card {
-  position: absolute;
   width: 50px;
   height: 70px;
   border-radius: 6px;
@@ -130,30 +132,13 @@ ul {
   align-items: center;
   font-size: 32px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  grid-column: 1;
+  grid-row: 1;
 }
 
-.deck-card-bottom {
-  top: 0;
-  left: 0;
-}
-
-.deck-card-middle {
-  top: 0;
-  left: 0;
-  transform: translate(2.5px, -61px);
-}
-
-.deck-card-top {
-  top: 0;
-  left: 0;
-  transform: translate(5px, -120px);
-}
-
-.deck-card-trump {
-  top: 0;
-  left: 0;
-  transform: translate(5px, -120px);
-  z-index: 10;
+.deck-card.being-dealt {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .card-back {
@@ -174,7 +159,7 @@ ul {
 /* Card dealing animation */
 @keyframes deal-card-0 {
   0% {
-    transform: translate(0px, 0px) scale(1);
+    transform: translate(var(--start-x, 0px), var(--start-y, 0px)) scale(1);
     opacity: 1;
   }
   100% {
@@ -185,7 +170,8 @@ ul {
 
 @keyframes deal-card-1 {
   0% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
+    transform: translate(var(--start-x, 0px), var(--start-y, 0px)) scale(1)
+      rotate(0deg);
     opacity: 1;
   }
   100% {
@@ -200,7 +186,8 @@ ul {
 
 @keyframes deal-card-2 {
   0% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
+    transform: translate(var(--start-x, 0px), var(--start-y, 0px)) scale(1)
+      rotate(0deg);
     opacity: 1;
   }
   100% {
@@ -215,7 +202,8 @@ ul {
 
 @keyframes deal-card-3 {
   0% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
+    transform: translate(var(--start-x, 0px), var(--start-y, 0px)) scale(1)
+      rotate(0deg);
     opacity: 1;
   }
   100% {
@@ -230,7 +218,8 @@ ul {
 
 @keyframes deal-card-4 {
   0% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
+    transform: translate(var(--start-x, 0px), var(--start-y, 0px)) scale(1)
+      rotate(0deg);
     opacity: 1;
   }
   100% {
@@ -285,29 +274,32 @@ ul {
   align-items: center;
   font-size: 32px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  animation-fill-mode: forwards;
+  animation-fill-mode: both;
   grid-column: 1;
   grid-row: 1;
+  opacity: 0;
 }
 
 /* Trump card shake animation */
 @keyframes trump-shake {
   0%,
   100% {
-    transform: translate(5px, -120px) rotate(0deg);
+    transform: translate(var(--shake-x), var(--shake-y)) rotate(0deg);
   }
   10%,
   30%,
   50%,
   70%,
   90% {
-    transform: translate(3px, -120px) rotate(-2deg);
+    transform: translate(calc(var(--shake-x) - 2px), var(--shake-y))
+      rotate(-2deg);
   }
   20%,
   40%,
   60%,
   80% {
-    transform: translate(7px, -120px) rotate(2deg);
+    transform: translate(calc(var(--shake-x) + 2px), var(--shake-y))
+      rotate(2deg);
   }
 }
 
